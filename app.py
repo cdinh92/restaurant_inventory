@@ -56,6 +56,31 @@ def clear_list():
     db.session.commit()
     return redirect(url_for('index'))
 
+@app.route('/admin', methods=['GET', 'POST'])
+def admin_panel():
+    if request.method == 'POST':
+        item_name = request.form.get('name')
+        store_id = request.form.get('store_id', type=int)
+        section_id = request.form.get('section_id', type=int)
+        
+        if item_name and store_id and section_id:
+            new_item = Item(name=item_name, store_id=store_id, section_id=section_id, quantity_needed=0)
+            db.session.add(new_item)
+            db.session.commit()
+        return redirect(url_for('admin_panel'))
+        
+    items = Item.query.all()
+    stores = Store.query.all()
+    sections = Section.query.all()
+    return render_template('admin.html', items=items, stores=stores, sections=sections)
+
+@app.route('/admin/delete/<int:item_id>', methods=['POST'])
+def delete_item(item_id):
+    item = Item.query.get_or_404(item_id)
+    db.session.delete(item)
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
+
 if __name__ == '__main__':
     # host='0.0.0.0' allows external access from your mobile device on the local network
     app.run(host='0.0.0.0', port=5001, debug=True)
