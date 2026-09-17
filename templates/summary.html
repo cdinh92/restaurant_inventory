@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Shopping Export</h3>
+    <a href="/" class="btn btn-secondary btn-sm">Back</a>
+</div>
+
+<div class="card shadow-sm mb-4">
+    <div class="card-body">
+        {% if grouped_list %}
+            {% for store, items in grouped_list.items() %}
+                <h5 class="text-primary mt-3 border-bottom pb-1">{{ store }}</h5>
+                <ul class="list-unstyled mb-0">
+                    {% for item in items %}
+                        <li class="mb-1">☐ <strong>{{ item.quantity_needed }}x</strong> - {{ item.name }}</li>
+                    {% endfor %}
+                </ul>
+            {% endfor %}
+        {% else %}
+            <p class="text-muted mb-0">No items needed. All quantities are zero.</p>
+        {% endif %}
+    </div>
+</div>
+
+<textarea class="form-control mb-3" rows="8" readonly>
+{% for store, items in grouped_list.items() %}
+{{ store.upper() }}:
+{% for item in items %}- {{ item.quantity_needed }}x {{ item.name }}
+{% endfor %}
+{% endfor %}
+</textarea>
+
+<form method="POST" action="/clear_list" onsubmit="return confirm('Are you sure you want to reset all inventory counts to zero?');">
+    <button type="submit" class="btn btn-danger w-100 touch-btn">Complete Shopping (Clear List)</button>
+</form>
+{% endblock %}

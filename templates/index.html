@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block content %}
+<h3 class="mb-3">Select Staff / Section</h3>
+<div class="d-grid gap-2">
+    {% for section in sections %}
+        <a href="/section/{{ section.id }}" class="btn btn-primary touch-btn text-start">
+            {{ section.name }}
+        </a>
+    {% endfor %}
+</div>
+{% endblock %}
