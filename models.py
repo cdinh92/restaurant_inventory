@@ -9,8 +9,9 @@ class Store(db.Model):
 
 class Section(db.Model):
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(50), nullable=False)
-    items = db.relationship('Item', backref='section', lazy=True)
+    name = db.Column(db.String(100), nullable=False)
+    pin = db.Column(db.String(4), nullable=True) # Optional 4-digit PIN
+    items = db.relationship('Item', backref='section', lazy=True, cascade="all, delete-orphan")
 
 class Item(db.Model):
     id = db.Column(db.Integer, primary_key=True)

@@ -1,0 +1,23 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="row justify-content-center mt-5">
+    <div class="col-md-6 col-lg-4">
+        <div class="card shadow-sm p-4 text-center">
+            <h3 class="mb-3">🔐 Admin Panel Locked</h3>
+            <p class="text-muted">Enter the master PIN to access settings.</p>
+            
+            {% if error %}
+                <div class="alert alert-danger py-2">{{ error }}</div>
+            {% endif %}
+            
+            <form method="POST">
+                <div class="mb-3">
+                    <input type="password" name="pin" class="form-control form-control-lg text-center" placeholder="Enter PIN" maxlength="4" autofocus required>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 mb-2">Unlock Admin</button>
+                <a href="/" class="btn btn-secondary w-100">Back to Home</a>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

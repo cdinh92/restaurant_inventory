@@ -4,8 +4,12 @@ import os
 import difflib # for searching bar
 from datetime import datetime
 import json
+from flask import session # add protection for section PINs
 
 app = Flask(__name__)
+
+app.secret_key = '123456' # Flask requires a secret key to be configured
+
 # Uses a local SQLite file
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///restaurant.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -33,12 +37,24 @@ def manage_section(section_id):
     
     if request.method == 'POST':
         for item in items:
-            qty = request.form.get(f'item_{item.id}', 0, type=int)
-            item.quantity_needed = qty
+            qty = request.form.get(f'quantity_needed_{item.id}', item.quantity_needed, type=int)
+            item.quantity_needed = max(0, qty)
         db.session.commit()
         return redirect(url_for('manage_section', section_id=section.id))
         
     return render_template('section.html', section=section, items=items)
+
+@app.route('/admin/update_section/<int:section_id>', methods=['POST'])
+def update_section(section_id):
+    section = Section.query.get_or_404(section_id)
+    section.name = request.form.get('name', section.name)
+    
+    # Clean and update the PIN (leave blank to remove protection)
+    pin = request.form.get('pin', '').strip()
+    section.pin = pin if pin else None
+    
+    db.session.commit()
+    return redirect(url_for('admin_panel'))
 
 @app.route('/update_item_qty/<int:item_id>', methods=['POST'])
 def update_item_qty(item_id):
@@ -77,8 +93,30 @@ def clear_list():
     db.session.commit()
     return redirect(url_for('index'))
 
-@app.route('/admin', methods=['GET', 'POST'])
-def admin_panel():
+ADMIN_PIN = "1234" # You can change this master PIN to whatever you like!
+
+# 1. Clicking Admin from the navbar always clears session and shows the PIN lock screen
+@app.route('/admin', methods=['GET'])
+def admin_login():
+    session.pop('admin_unlocked', None)
+    return render_template('admin_lock.html')
+
+# 2. Verifying the PIN submitted from the lock screen (posts back to /admin)
+@app.route('/admin', methods=['POST'])
+def admin_verify():
+    entered_pin = request.form.get('pin', '')
+    if entered_pin == ADMIN_PIN:
+        session['admin_unlocked'] = True
+        return redirect(url_for('admin_dashboard'))
+    else:
+        return render_template('admin_lock.html', error="Incorrect PIN. Please try again.")
+
+# 3. The Unlocked Dashboard (handles viewing items on GET and adding items on POST)
+@app.route('/admin/dashboard', methods=['GET', 'POST'])
+def admin_dashboard():
+    if session.get('admin_unlocked') != True:
+        return redirect(url_for('admin_login'))
+        
     if request.method == 'POST':
         item_name = request.form.get('name')
         store_id = request.form.get('store_id', type=int)
@@ -88,19 +126,12 @@ def admin_panel():
             new_item = Item(name=item_name, store_id=store_id, section_id=section_id, quantity_needed=0)
             db.session.add(new_item)
             db.session.commit()
-        return redirect(url_for('admin_panel'))
+        return redirect(url_for('admin_dashboard'))
         
     items = Item.query.all()
     stores = Store.query.all()
     sections = Section.query.all()
     return render_template('admin.html', items=items, stores=stores, sections=sections)
-
-@app.route('/admin/delete/<int:item_id>', methods=['POST'])
-def delete_item(item_id):
-    item = Item.query.get_or_404(item_id)
-    db.session.delete(item)
-    db.session.commit()
-    return redirect(url_for('admin_panel'))
 
 @app.route('/search')
 def search_items():
