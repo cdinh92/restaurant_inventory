@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block content %}
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3>Export History Tab</h3>
+    <a href="/shopping_list" class="btn btn-secondary btn-sm">Back</a>
+</div>
+
+<p class="text-muted small">Previous shopping list layouts are automatically upserted daily so only the most recent version per calendar day is retained.</p>
+
+<div class="list-group">
+    {% for record in history %}
+    <div class="list-group-item mb-3 shadow-sm rounded">
+        <div class="d-flex justify-content-between align-items-center bg-light p-2 rounded mb-2">
+            <h5 class="mb-0 text-primary">Export Date: {{ record.date }}</h5>
+        </div>
+        <div class="row g-2">
+            {% for key, quad in record.quadrants.items() %}
+            <div class="col-md-6">
+                <div class="p-2 border rounded bg-white">
+                    <strong>{{ quad.title }}</strong>
+                    <ul class="list-unstyled small mb-0 mt-1">
+                        {% for item in quad.items %}
+                            <li>☐ {{ item.qty }}x - {{ item.name }}</li>
+                        {% else %}
+                            <li class="text-muted">None</li>
+                        {% endfor %}
+                    </ul>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+    {% else %}
+    <div class="alert alert-info">No export history found yet. Generate an export layout from your shopping list to get started!</div>
+    {% endfor %}
+</div>
+{% endblock %}
