@@ -1,11 +1,26 @@
 {% extends "base.html" %}
 {% block content %}
-<h3 class="mb-3">Select Staff / Section</h3>
-<div class="d-grid gap-2">
+<!-- Quick Search Bar on Home Screen -->
+<form method="GET" action="/search" class="mb-4">
+    <div class="input-group input-group-lg shadow-sm">
+        <input type="text" name="q" class="form-control" placeholder="🔍 Quick search items...">
+        <button class="btn btn-primary px-4" type="submit">Search</button>
+    </div>
+</form>
+
+<div class="d-flex justify-content-between align-items-center mb-3">
+    <h3 class="mb-0">Inventory Sections</h3>
+</div>
+
+<!-- Your existing sections/items list goes here -->
+<div class="list-group shadow-sm">
     {% for section in sections %}
-        <a href="/section/{{ section.id }}" class="btn btn-primary touch-btn text-start">
-            {{ section.name }}
+        <a href="/section/{{ section.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
+            <span class="fs-5 fw-semibold">{{ section.name }}</span>
+            <span class="badge bg-secondary rounded-pill">View</span>
         </a>
+    {% else %}
+        <div class="p-4 text-center text-muted">No sections created yet. Visit Admin to set them up!</div>
     {% endfor %}
 </div>
 {% endblock %}

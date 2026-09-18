@@ -29,16 +29,29 @@ def index():
 @app.route('/section/<int:section_id>', methods=['GET', 'POST'])
 def manage_section(section_id):
     section = Section.query.get_or_404(section_id)
+    items = Item.query.filter_by(section_id=section.id).all()
     
     if request.method == 'POST':
-        for item in section.items:
-            # Update quantity based on form input
+        for item in items:
             qty = request.form.get(f'item_{item.id}', 0, type=int)
             item.quantity_needed = qty
         db.session.commit()
-        return redirect(url_for('index'))
+        return redirect(url_for('manage_section', section_id=section.id))
         
-    return render_template('section.html', section=section)
+    return render_template('section.html', section=section, items=items)
+
+@app.route('/update_item_qty/<int:item_id>', methods=['POST'])
+def update_item_qty(item_id):
+    item = Item.query.get_or_404(item_id)
+    try:
+        qty = int(request.form.get('quantity_needed', 0))
+        item.quantity_needed = max(0, qty)
+        db.session.commit()
+    except ValueError:
+        pass
+    
+    # Redirect back to the correct section page route name
+    return redirect(url_for('manage_section', section_id=item.section_id))
 
 @app.route('/shopping_list')
 def shopping_list():

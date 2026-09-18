@@ -5,18 +5,16 @@
     <a href="/" class="btn btn-secondary btn-sm">Back</a>
 </div>
 
-<!-- Search Input Form -->
 <form method="GET" action="/search" class="mb-4">
-    <div class="input-group input-group-lg">
-        <input type="text" name="q" class="form-control" placeholder="Type item name (typos okay)..." value="{{ query }}" autofocus>
-        <button class="btn btn-primary" type="submit">Search</button>
+    <div class="input-group input-group-lg shadow-sm">
+        <input type="text" name="q" class="form-control" placeholder="🔍 Type item name..." value="{{ query }}" autofocus>
+        <button class="btn btn-primary px-4" type="submit">Search</button>
     </div>
 </form>
 
-<!-- Search Results with Inline Quantity Editing -->
 {% if query %}
     <h5 class="text-muted mb-3">Results for "{{ query }}":</h5>
-    <ul class="list-group mb-4">
+    <ul class="list-group mb-4 shadow-sm">
         {% for item in results %}
         <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-3">
             <div>
@@ -24,23 +22,30 @@
                 <small class="text-muted">Store: {{ item.store.name }} | Section: {{ item.section.name }}</small>
             </div>
             
-            <!-- Inline Quantity Update Form -->
             <form method="POST" action="/update_search_qty/{{ item.id }}" class="d-flex align-items-center gap-2">
                 <input type="hidden" name="query" value="{{ query }}">
-                <div class="input-group input-group-sm" style="width: 130px;">
-                    <span class="input-group-text">Qty</span>
-                    <input type="number" name="quantity_needed" class="form-control text-center" value="{{ item.quantity_needed }}" min="0">
+                <div class="input-group" style="width: 175px;">
+                    <button class="btn btn-outline-danger fw-bold px-2" type="button" onclick="adjustQty(this, -1)">-</button>
+                    <input type="number" name="quantity_needed" class="form-control text-center fw-bold" value="{{ item.quantity_needed }}" min="0">
+                    <button class="btn btn-outline-primary fw-bold px-2" type="button" onclick="adjustQty(this, 1)">+</button>
                 </div>
-                <button type="submit" class="btn btn-success btn-sm">Update</button>
+                <button type="submit" class="btn btn-success btn-sm px-3">Update</button>
             </form>
         </li>
         {% else %}
         <li class="list-group-item text-center py-4 text-muted">No matching items found. Try a different spelling!</li>
         {% endfor %}
     </ul>
-{% else %}
-    <div class="text-center text-muted py-5">
-        <p class="fs-5">Type an item name above to instantly find it and update its quantity.</p>
-    </div>
 {% endif %}
+
+<script>
+    function adjustQty(btn, change) {
+        const inputGroup = btn.closest('.input-group');
+        const input = inputGroup.querySelector('input[type="number"]');
+        let currentValue = parseInt(input.value) || 0;
+        let newValue = currentValue + change;
+        if (newValue < 0) newValue = 0;
+        input.value = newValue;
+    }
+</script>
 {% endblock %}

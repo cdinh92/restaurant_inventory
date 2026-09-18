@@ -10,7 +10,7 @@
         body { background-color: #eef2f5; font-family: sans-serif; }
         .action-bar { max-width: 8.5in; margin: 20px auto; }
         
-        /* Standard Letter Page Container with Asymmetrical Rows */
+        /* Standard Letter Page Container */
         .letter-page {
             width: 8.5in;
             height: 11in;
@@ -31,11 +31,11 @@
             padding: 20px;
             overflow-y: auto;
             background: #fafafa;
-            font-size: 1.5rem; /* Substantially larger font size for items */
+            font-size: 1.5rem; /* Default large font size */
         }
         
         .quadrant h5 {
-            font-size: 2rem; /* Much larger header text */
+            font-size: 2rem;
             border-bottom: 3px solid #1e293b;
             padding-bottom: 8px;
             margin-bottom: 15px;
@@ -44,7 +44,24 @@
         }
 
         .quadrant li {
-            margin-bottom: 12px; /* Extra breathing room between items */
+            margin-bottom: 12px;
+        }
+
+        /* Automatic Compact & 2-Column Mode for Large Sections */
+        .quadrant.compact-mode {
+            font-size: 1.05rem !important;
+        }
+        .quadrant.compact-mode h5 {
+            font-size: 1.4rem !important;
+            margin-bottom: 8px;
+            padding-bottom: 4px;
+        }
+        .quadrant.compact-mode li {
+            margin-bottom: 6px !important;
+        }
+        .quadrant ul.multi-col {
+            column-count: 2;
+            column-gap: 15px;
         }
 
         @media print {
@@ -68,7 +85,7 @@
 
     <div id="captureArea" class="letter-page">
         <!-- Top Left: Restaurant Depot -->
-        <div class="quadrant">
+        <div class="quadrant" data-section="top_left">
             <h5>{{ quadrants.top_left.title }}</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.top_left['items'] %}
@@ -79,7 +96,7 @@
             </ul>
         </div>
         <!-- Top Right: Vietnamese Markets -->
-        <div class="quadrant">
+        <div class="quadrant" data-section="top_right">
             <h5>{{ quadrants.top_right.title }}</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.top_right['items'] %}
@@ -90,7 +107,7 @@
             </ul>
         </div>
         <!-- Bottom Left: Costco & Walmart -->
-        <div class="quadrant">
+        <div class="quadrant" data-section="bottom_left">
             <h5>{{ quadrants.bottom_left.title }}</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.bottom_left['items'] %}
@@ -101,7 +118,7 @@
             </ul>
         </div>
         <!-- Bottom Right: Sam's Club -->
-        <div class="quadrant">
+        <div class="quadrant" data-section="bottom_right">
             <h5>{{ quadrants.bottom_right.title }}</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.bottom_right['items'] %}
@@ -114,6 +131,22 @@
     </div>
 
     <script>
+        // Automatically switch sections with many items to compact 2-column mode
+        document.addEventListener("DOMContentLoaded", function() {
+            const quadrants = document.querySelectorAll('.quadrant');
+            quadrants.forEach(quad => {
+                const items = quad.querySelectorAll('li');
+                // If a section has more than 6 items, trigger compact text and 2 columns
+                if (items.length > 6) {
+                    quad.classList.add('compact-mode');
+                    const ul = quad.querySelector('ul');
+                    if (ul) {
+                        ul.classList.add('multi-col');
+                    }
+                }
+            });
+        });
+
         function downloadPNG() {
             const captureElement = document.getElementById('captureArea');
             html2canvas(captureElement, { scale: 2 }).then(canvas => {
