@@ -13,25 +13,34 @@
     </div>
 </form>
 
-<!-- Search Results -->
+<!-- Search Results with Inline Quantity Editing -->
 {% if query %}
     <h5 class="text-muted mb-3">Results for "{{ query }}":</h5>
     <ul class="list-group mb-4">
         {% for item in results %}
-        <li class="list-group-item d-flex justify-content-between align-items-center py-3">
+        <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-3">
             <div>
                 <h5 class="mb-0">{{ item.name }}</h5>
                 <small class="text-muted">Store: {{ item.store.name }} | Section: {{ item.section.name }}</small>
             </div>
-            <a href="/section/{{ item.section.id }}" class="btn btn-outline-primary btn-sm">Go to Section</a>
+            
+            <!-- Inline Quantity Update Form -->
+            <form method="POST" action="/update_search_qty/{{ item.id }}" class="d-flex align-items-center gap-2">
+                <input type="hidden" name="query" value="{{ query }}">
+                <div class="input-group input-group-sm" style="width: 130px;">
+                    <span class="input-group-text">Qty</span>
+                    <input type="number" name="quantity_needed" class="form-control text-center" value="{{ item.quantity_needed }}" min="0">
+                </div>
+                <button type="submit" class="btn btn-success btn-sm">Update</button>
+            </form>
         </li>
         {% else %}
-        <li class="list-group-item">No matching items found. Try a different spelling!</li>
+        <li class="list-group-item text-center py-4 text-muted">No matching items found. Try a different spelling!</li>
         {% endfor %}
     </ul>
 {% else %}
     <div class="text-center text-muted py-5">
-        <p>Type an item name above to instantly find where it belongs and update its count.</p>
+        <p class="fs-5">Type an item name above to instantly find it and update its quantity.</p>
     </div>
 {% endif %}
 {% endblock %}

@@ -110,6 +110,20 @@ def search_items():
                 
     return render_template('search.html', query=query, results=results)
 
+@app.route('/update_search_qty/<int:item_id>', methods=['POST'])
+def update_search_qty(item_id):
+    item = Item.query.get_or_404(item_id)
+    try:
+        qty = int(request.form.get('quantity_needed', 0))
+        item.quantity_needed = max(0, qty)
+        db.session.commit()
+    except ValueError:
+        pass
+    
+    # Keep the user's search query active after updating
+    query = request.form.get('query', '')
+    return redirect(url_for('search_items', q=query))
+
 """
 This is the new export layout feature that groups items into 4 quadrants based on store type.
 It also saves the layout to a history table for future reference.
@@ -171,4 +185,4 @@ def view_history():
 
 if __name__ == '__main__':
     # host='0.0.0.0' allows external access from your mobile device on the local network
-    app.run(host='0.0.0.0', port=5001, debug=True)
+    app.run(host='10.0.0.72', port=5001, debug=True) # allow external access from your mobile device on the local network
