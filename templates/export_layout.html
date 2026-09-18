@@ -9,6 +9,8 @@
     <style>
         body { background-color: #eef2f5; font-family: sans-serif; }
         .action-bar { max-width: 8.5in; margin: 20px auto; }
+        
+        /* Standard Letter Page Container with Asymmetrical Rows */
         .letter-page {
             width: 8.5in;
             height: 11in;
@@ -18,24 +20,33 @@
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
             display: grid;
             grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1fr 1fr;
+            grid-template-rows: 1.3fr 0.7fr;
             gap: 20px;
             box-sizing: border-box;
         }
+        
         .quadrant {
-            border: 2px dashed #cbd5e1;
-            border-radius: 8px;
-            padding: 15px;
+            border: 3px dashed #94a3b8;
+            border-radius: 10px;
+            padding: 20px;
             overflow-y: auto;
             background: #fafafa;
+            font-size: 1.5rem; /* Substantially larger font size for items */
         }
+        
         .quadrant h5 {
-            border-bottom: 2px solid #334155;
-            padding-bottom: 5px;
-            margin-bottom: 10px;
-            color: #1e293b;
-            font-weight: bold;
+            font-size: 2rem; /* Much larger header text */
+            border-bottom: 3px solid #1e293b;
+            padding-bottom: 8px;
+            margin-bottom: 15px;
+            color: #0f172a;
+            font-weight: 800;
         }
+
+        .quadrant li {
+            margin-bottom: 12px; /* Extra breathing room between items */
+        }
+
         @media print {
             body { background: none; }
             .action-bar { display: none; }
@@ -56,43 +67,47 @@
     </div>
 
     <div id="captureArea" class="letter-page">
+        <!-- Top Left: Restaurant Depot -->
         <div class="quadrant">
             <h5>{{ quadrants.top_left.title }}</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.top_left['items'] %}
-                    <li class="mb-1">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                 {% else %}
-                    <li class="text-muted small">No items needed.</li>
+                    <li class="text-muted fs-5">No items needed.</li>
                 {% endfor %}
             </ul>
         </div>
+        <!-- Top Right: Vietnamese Markets -->
         <div class="quadrant">
             <h5>{{ quadrants.top_right.title }}</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.top_right['items'] %}
-                    <li class="mb-1">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                 {% else %}
-                    <li class="text-muted small">No items needed.</li>
+                    <li class="text-muted fs-5">No items needed.</li>
                 {% endfor %}
             </ul>
         </div>
+        <!-- Bottom Left: Costco & Walmart -->
         <div class="quadrant">
             <h5>{{ quadrants.bottom_left.title }}</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.bottom_left['items'] %}
-                    <li class="mb-1">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                 {% else %}
-                    <li class="text-muted small">No items needed.</li>
+                    <li class="text-muted fs-5">No items needed.</li>
                 {% endfor %}
             </ul>
         </div>
+        <!-- Bottom Right: Sam's Club -->
         <div class="quadrant">
             <h5>{{ quadrants.bottom_right.title }}</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.bottom_right['items'] %}
-                    <li class="mb-1">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                 {% else %}
-                    <li class="text-muted small">No items needed.</li>
+                    <li class="text-muted fs-5">No items needed.</li>
                 {% endfor %}
             </ul>
         </div>
