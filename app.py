@@ -2,6 +2,8 @@ from flask import Flask, render_template, request, redirect, url_for
 from models import db, Store, Section, Item, seed_database
 import os
 import difflib # for searching bar
+from datetime import datetime
+import json
 
 app = Flask(__name__)
 # Uses a local SQLite file
@@ -9,6 +11,11 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///restaurant.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+# Create a new table for shopping history
+class ShoppingHistory(db.Model):
+    id = db.Column(db.Integer, primary_key=True)
+    export_date = db.Column(db.String(20), unique=True, nullable=False) # YYYY-MM-DD format for upsert rule
+    data_json = db.Column(db.Text, nullable=False)
 
 with app.app_context():
     db.create_all()
@@ -102,6 +109,65 @@ def search_items():
                 results.append(item)
                 
     return render_template('search.html', query=query, results=results)
+
+"""
+This is the new export layout feature that groups items into 4 quadrants based on store type.
+It also saves the layout to a history table for future reference.
+"""
+@app.route('/export_layout')
+def export_layout():
+    # Fetch all items with quantities > 0
+    items = Item.query.filter(Item.quantity_needed > 0).all()
+    
+    # Initialize the 4 quadrants
+    quadrants = {
+        'top_left': {'title': 'Restaurant Depot', 'items': []},
+        'top_right': {'title': 'Vietnamese Markets', 'items': []},
+        'bottom_left': {'title': 'Costco & Walmart', 'items': []},
+        'bottom_right': {'title': "Sam's Club", 'items': []}
+    }
+    
+    # Map stores to the correct quadrants
+    for item in items:
+        store_name = item.store.name.lower()
+        item_data = {'name': item.name, 'qty': item.quantity_needed}
+        
+        if 'depot' in store_name:
+            quadrants['top_left']['items'].append(item_data)
+        elif 'vietnam' in store_name or 'asian' in store_name or 'market' in store_name:
+            quadrants['top_right']['items'].append(item_data)
+        elif 'costco' in store_name or 'walmart' in store_name:
+            quadrants['bottom_left']['items'].append(item_data)
+        elif 'sam' in store_name:
+            quadrants['bottom_right']['items'].append(item_data)
+        else:
+            # Default fallback quadrant if store name doesn't match
+            quadrants['top_left']['items'].append(item_data)
+
+    # Daily Upsert Logic: Save or overwrite today's entry in history
+    today_str = datetime.now().strftime('%Y-%m-%d')
+    serialized_data = json.dumps(quadrants)
+    
+    existing_history = ShoppingHistory.query.filter_by(export_date=today_str).first()
+    if existing_history:
+        existing_history.data_json = serialized_data
+    else:
+        new_history = ShoppingHistory(export_date=today_str, data_json=serialized_data)
+        db.session.add(new_history)
+    db.session.commit()
+
+    return render_template('export_layout.html', quadrants=quadrants, export_date=today_str)
+
+@app.route('/history')
+def view_history():
+    history_records = ShoppingHistory.query.order_by(ShoppingHistory.export_date.desc()).all()
+    parsed_history = []
+    for record in history_records:
+        parsed_history.append({
+            'date': record.export_date,
+            'quadrants': json.loads(record.data_json)
+        })
+    return render_template('history.html', history=parsed_history)
 
 if __name__ == '__main__':
     # host='0.0.0.0' allows external access from your mobile device on the local network
