@@ -1,6 +1,7 @@
 from flask import Flask, render_template, request, redirect, url_for
 from models import db, Store, Section, Item, seed_database
 import os
+import difflib # for searching bar
 
 app = Flask(__name__)
 # Uses a local SQLite file
@@ -80,6 +81,27 @@ def delete_item(item_id):
     db.session.delete(item)
     db.session.commit()
     return redirect(url_for('admin_panel'))
+
+@app.route('/search')
+def search_items():
+    query = request.args.get('q', '').strip()
+    results = []
+    
+    if query:
+        all_items = Item.query.all()
+        # Create a dictionary mapping item names to the item objects
+        item_dict = {item.name: item for item in all_items}
+        
+        # Find close matches for spelling mistakes (cutoff=0.3 means a loose match)
+        close_names = difflib.get_close_matches(query, item_dict.keys(), n=8, cutoff=0.3)
+        results = [item_dict[name] for name in close_names]
+        
+        # Fallback: if substring match isn't in close_names, add it if it contains the query letters
+        for item in all_items:
+            if query.lower() in item.name.lower() and item not in results:
+                results.append(item)
+                
+    return render_template('search.html', query=query, results=results)
 
 if __name__ == '__main__':
     # host='0.0.0.0' allows external access from your mobile device on the local network
