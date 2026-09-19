@@ -133,6 +133,7 @@ def admin_dashboard():
     sections = Section.query.all()
     return render_template('admin.html', items=items, stores=stores, sections=sections)
 
+# Adding delete method for Admin Panel
 @app.route('/delete_item/<int:id>', methods=['POST'])
 def delete_item(id):
     # Ensure only unlocked admins can delete items
