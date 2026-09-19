@@ -133,6 +133,17 @@ def admin_dashboard():
     sections = Section.query.all()
     return render_template('admin.html', items=items, stores=stores, sections=sections)
 
+@app.route('/delete_item/<int:id>', methods=['POST'])
+def delete_item(id):
+    # Ensure only unlocked admins can delete items
+    if session.get('admin_unlocked') != True:
+        return redirect(url_for('admin_login'))
+        
+    item = Item.query.get_or_404(id)
+    db.session.delete(item)
+    db.session.commit()
+    return redirect(url_for('admin_dashboard'))
+    
 @app.route('/search')
 def search_items():
     query = request.args.get('q', '').strip()
