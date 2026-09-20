@@ -1,27 +1,102 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    /* Colorful Grid Styles */
+    .category-card {
+        border-radius: 8px;
+        color: white;
+        text-align: center;
+        padding: 15px 5px;
+        cursor: pointer;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+    }
+    .category-card:active { transform: scale(0.97); }
+    .category-card i { font-size: 2rem; margin-bottom: 8px; }
+    
+    /* Specific Colors */
+    .bg-soft-drinks { background-color: #d32f2f; } /* Red */
+    .bg-frozen { background-color: #1976d2; } /* Blue */
+    .bg-boba { background-color: #f57c00; } /* Orange */
+    .bg-sauce { background-color: #00796b; } /* Teal */
+    .bg-containers { background-color: #455a64; } /* Dark Blue/Grey */
+    .bg-other { background-color: #795548; } /* Brown */
+</style>
+
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3>{{ section.name }}</h3>
     <a href="/" class="btn btn-secondary btn-sm">Back</a>
 </div>
 
-<ul class="list-group shadow-sm mb-4">
-    {% for item in items %}
-    <li class="list-group-item d-flex flex-column flex-md-row justify-content-between align-items-md-center py-3 gap-3">
-        <div>
-            <h5 class="mb-0">{{ item.name }}</h5>
-            <small class="text-muted">Store: {{ item.store.name }}</small>
+<!-- Category Grid (Automatically displays for the Drink Makers section) -->
+{% if 'drink' in section.name.lower() %}
+<div class="row g-2 mb-3">
+    <div class="col-4">
+        <div class="category-card bg-soft-drinks" onclick="filterItems('soft drinks')">
+            <div class="fs-2 mb-1">🥤</div>
+            <div class="fw-bold lh-sm" style="font-size: 0.75rem;">Soft Drinks</div>
         </div>
-        
-        <form method="POST" action="/update_item_qty/{{ item.id }}" class="d-flex align-items-center gap-2">
-            <div class="input-group" style="width: 175px;">
-                <button class="btn btn-outline-danger fw-bold px-2" type="button" onclick="adjustQty(this, -1)">-</button>
-                <!-- Added onchange to auto-save when manually typing on the keyboard -->
-                <input type="number" name="quantity_needed" class="form-control text-center fw-bold" value="{{ item.quantity_needed }}" min="0" onchange="autoSave(this.closest('form'), this)">
-                <button class="btn btn-outline-primary fw-bold px-2" type="button" onclick="adjustQty(this, 1)">+</button>
+    </div>
+    <div class="col-4">
+        <div class="category-card bg-frozen" onclick="filterItems('frozen')">
+            <div class="fs-2 mb-1">🍓</div>
+            <div class="fw-bold lh-sm" style="font-size: 0.75rem;">Frozen Fruits</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="category-card bg-boba" onclick="filterItems('boba')">
+            <div class="fs-2 mb-1">🧋</div>
+            <div class="fw-bold lh-sm" style="font-size: 0.75rem;">Boba</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="category-card bg-sauce" onclick="filterItems('sauce')">
+            <div class="fs-2 mb-1">🦪</div>
+            <div class="fw-bold lh-sm" style="font-size: 0.75rem;">Seafood Sauce</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="category-card bg-containers" onclick="filterItems('containers')">
+            <div class="fs-2 mb-1">🥡</div>
+            <div class="fw-bold lh-sm" style="font-size: 0.75rem;">Containers</div>
+        </div>
+    </div>
+    <div class="col-4">
+        <div class="category-card bg-other" onclick="filterItems('other')">
+            <div class="fs-2 mb-1">📦</div>
+            <div class="fw-bold lh-sm" style="font-size: 0.75rem;">Other</div>
+        </div>
+    </div>
+</div>
+
+<div class="d-flex justify-content-between align-items-end mb-2 border-bottom pb-2">
+    <h6 id="current-category" class="mb-0 fw-bold text-primary">All Items</h6>
+    <button class="btn btn-sm btn-outline-secondary py-0 px-2" onclick="filterItems('all')">Show All</button>
+</div>
+{% endif %}
+
+<!-- The Item List -->
+<ul class="list-group shadow-sm mb-4" id="item-list">
+    {% for item in items %}
+    <li class="list-group-item item-row py-3 px-2" data-name="{{ item.name | lower }}">
+        <div class="d-flex flex-column gap-2">
+            <div>
+                <h6 class="mb-0 fw-bold">{{ item.name }}</h6>
+                <small class="text-muted" style="font-size: 0.75rem;">Store: {{ item.store.name }}</small>
             </div>
-            <!-- The Save button has been removed -->
-        </form>
+            
+            <form method="POST" action="/update_item_qty/{{ item.id }}" class="d-flex align-items-center">
+                <div class="input-group input-group-sm w-100">
+                    <button class="btn btn-outline-danger fw-bold px-3" type="button" onclick="adjustQty(this, -1)">-</button>
+                    <input type="number" name="quantity_needed" class="form-control text-center fw-bold fs-6" value="{{ item.quantity_needed }}" min="0" onchange="autoSave(this.closest('form'), this)">
+                    <button class="btn btn-outline-primary fw-bold px-3" type="button" onclick="adjustQty(this, 1)">+</button>
+                </div>
+            </form>
+        </div>
     </li>
     {% else %}
     <li class="list-group-item text-center py-4 text-muted">No items found in this section.</li>
@@ -29,6 +104,63 @@
 </ul>
 
 <script>
+    // 1. SMART KEYWORD FILTERING
+    const categories = {
+        'soft drinks': ['coke', 'sprite', 'dr pepper', 'pepsi', 'diet pepsi', 'diet coke', 'mountain dew', 'frozen coconut juice', 'nuoc dua', 'cafe lee'],
+        'frozen': ['mango', 'strawberry', 'peach', 'watermelon', 'banana', 'raspberry', 'blueberry', 'pineapple', 'avocado'],
+        'boba': ['boba', 'half and half', 'whip', 'sua dac', 'straw'],
+        'sauce': ['ketchup', 'mayo', 'horseradish', 'tartar', 'cocktail', 'sauce'],
+        'containers': ['ly', '16oz', '12oz'],
+        'other': ['syrup', 'powder', 'ground', 'tea', 'ice cream']
+    };
+
+    function filterItems(category) {
+        const rows = document.querySelectorAll('.item-row');
+        const currentCatTitle = document.getElementById('current-category');
+        
+        if (category === 'all') {
+            rows.forEach(row => row.style.display = 'block');
+            if (currentCatTitle) currentCatTitle.innerText = 'All Items';
+            return;
+        }
+
+        // Update the sub-heading
+        const titles = {
+            'soft drinks': '🥤 Soft Drinks', 
+            'frozen': '🍓 Frozen Fruits', 
+            'boba': '🧋 Boba', 
+            'sauce': '🦪 Seafood Sauce', 
+            'containers': '🥡 Containers', 
+            'other': '📦 Other Items'
+        };
+        if (currentCatTitle) currentCatTitle.innerText = titles[category];
+
+        // Filter the rows
+        rows.forEach(row => {
+            const itemName = row.getAttribute('data-name');
+            const keywords = categories[category];
+            
+            // Check if the item matches the specific keywords
+            let matches = keywords.some(keyword => itemName.includes(keyword));
+            
+            // Catch any random items that don't belong to the first 5 categories when viewing "Other"
+            let isCatchAll = false;
+            if (category === 'other' && !matches) {
+                let belongsToSomething = false;
+                for (const cat in categories) {
+                    if (cat !== 'other' && categories[cat].some(kw => itemName.includes(kw))) {
+                        belongsToSomething = true;
+                        break;
+                    }
+                }
+                isCatchAll = !belongsToSomething;
+            }
+
+            row.style.display = (matches || isCatchAll) ? 'block' : 'none';
+        });
+    }
+
+    // 2. AUTO-SAVE FUNCTIONALITY
     function adjustQty(btn, change) {
         const form = btn.closest('form');
         const input = form.querySelector('input[type="number"]');
@@ -36,25 +168,16 @@
         let newValue = currentValue + change;
         if (newValue < 0) newValue = 0;
         input.value = newValue;
-        
-        // Trigger auto-save in the background
         autoSave(form, input);
     }
 
     function autoSave(form, inputElement) {
         const formData = new FormData(form);
-        
-        // Send the data to Flask invisibly
-        fetch(form.action, {
-            method: 'POST',
-            body: formData
-        }).then(() => {
-            // Visual feedback: flashes the number green for half a second so you know it saved
-            inputElement.style.color = '#198754'; 
-            setTimeout(() => {
-                inputElement.style.color = ''; 
-            }, 500);
-        }).catch(err => console.error("Auto-save failed", err));
+        fetch(form.action, { method: 'POST', body: formData })
+            .then(() => {
+                inputElement.style.backgroundColor = '#e8f5e9'; // Light green flash
+                setTimeout(() => inputElement.style.backgroundColor = '', 400);
+            }).catch(err => console.error("Auto-save failed", err));
     }
 </script>
 {% endblock %}
