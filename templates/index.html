@@ -38,7 +38,6 @@
     <!-- Smart Alert (Hidden by default, triggered by rain/snow) -->
     <div id="weather-alert" class="alert alert-warning d-none shadow-sm border-warning mb-3" role="alert">
         <div class="d-flex align-items-center fw-bold text-dark">
-            <span class="fs-4 me-3">🍲</span> 
             <span id="weather-alert-text" style="font-size: 0.95rem;"></span>
         </div>
     </div>
@@ -89,9 +88,9 @@ document.addEventListener("DOMContentLoaded", function() {
         .then(response => response.json())
         .then(data => {
             const daily = data.daily;
-            let hasRainOrSnow = false;
-            let conditionType = "";
             let desktopHtml = "";
+            let rainDays = [];
+            let snowDays = [];
             
             // Map WMO weather codes to emojis and types
             const getWeatherDetails = (code) => {
@@ -101,26 +100,25 @@ document.addEventListener("DOMContentLoaded", function() {
                 return { icon: "☀️", type: "clear skies" };
             };
 
-            // Loop through the 5 days to build the desktop cards
+            // Loop through the 5 days
             for (let i = 0; i < 5; i++) {
-                // T12:00:00 forces noon to avoid timezone date-shifting bugs
                 const date = new Date(daily.time[i] + 'T12:00:00'); 
-                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const shortDayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const fullDayName = date.toLocaleDateString('en-US', { weekday: 'long' });
                 const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                 const max = Math.round(daily.temperature_2m_max[i]);
                 const min = Math.round(daily.temperature_2m_min[i]);
                 const details = getWeatherDetails(daily.weathercode[i]);
 
-                // Check for restaurant trigger conditions
-                if (details.type === "rain" || details.type === "snow") {
-                    hasRainOrSnow = true;
-                    conditionType = details.type;
-                }
+                // Track which days have rain or snow for the alert
+                if (details.type === "rain") rainDays.push(fullDayName);
+                if (details.type === "snow") snowDays.push(fullDayName);
 
+                // Build desktop cards
                 desktopHtml += `
                     <div class="card flex-fill text-center border-0 shadow-sm" style="background-color: #f8f9fa;">
                         <div class="card-body p-2">
-                            <div class="fw-bold">${dayName}</div>
+                            <div class="fw-bold">${shortDayName}</div>
                             <div class="text-muted" style="font-size: 0.75rem;">${monthDay}</div>
                             <div class="fs-4 my-1">${details.icon}</div>
                             <div style="font-size: 0.85rem;">
@@ -131,20 +129,30 @@ document.addEventListener("DOMContentLoaded", function() {
                 `;
             }
 
-            // Inject Desktop HTML
             document.getElementById('desktop-forecast').innerHTML = desktopHtml;
 
-            // Inject Mobile HTML (Showing Tomorrow's weather summary)
+            // Mobile Summary (Tomorrow's weather)
             const tmrwDetails = getWeatherDetails(daily.weathercode[1]);
             const tmrwDate = new Date(daily.time[1] + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
             const tmrwMax = Math.round(daily.temperature_2m_max[1]);
             document.getElementById('mobile-forecast').innerHTML = 
                 `${tmrwDetails.icon} <strong>${tmrwDate}</strong>: High of ${tmrwMax}°F`;
 
-            // Display the smart alert if rain or snow is detected in the 5-day window
-            if (hasRainOrSnow) {
+            // Smart Alert Logic for Rain/Snow
+            if (rainDays.length > 0 || snowDays.length > 0) {
+                // Helper to format days (e.g., "Monday & Wednesday" or "Monday, Tuesday & Wednesday")
+                const formatDays = (days) => {
+                    if (days.length === 1) return days[0];
+                    if (days.length === 2) return days.join(" & ");
+                    return days.slice(0, -1).join(", ") + " & " + days[days.length - 1];
+                };
+
+                let alertParts = [];
+                if (rainDays.length > 0) alertParts.push(`🌧️ Rain expected ${formatDays(rainDays)}`);
+                if (snowDays.length > 0) alertParts.push(`❄️ Snow expected ${formatDays(snowDays)}`);
+
                 document.getElementById('weather-alert-text').innerText = 
-                    `Most likely ${conditionType} in the next couple days, please double check the needed inventory.`;
+                    `${alertParts.join(" and ")}. Please double-check essential inventory.`;
                 document.getElementById('weather-alert').classList.remove('d-none');
             }
         })
@@ -153,5 +161,6 @@ document.addEventListener("DOMContentLoaded", function() {
             console.error("Weather fetch failed:", error);
         });
 });
+    
 </script>
 {% endblock %}
