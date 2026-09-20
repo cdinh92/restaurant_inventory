@@ -33,6 +33,31 @@
     </div>
 </form>
 
+<!-- NEW: Weather Alert & Forecast Widget -->
+<div id="weather-widget" class="mb-5">
+    <!-- Smart Alert (Hidden by default, triggered by rain/snow) -->
+    <div id="weather-alert" class="alert alert-warning d-none shadow-sm border-warning mb-3" role="alert">
+        <div class="d-flex align-items-center fw-bold text-dark">
+            <span class="fs-4 me-3">🍲</span> 
+            <span id="weather-alert-text" style="font-size: 0.95rem;"></span>
+        </div>
+    </div>
+
+    <!-- Desktop View: 5-Day Forecast (Hidden on mobile) -->
+    <div class="d-none d-md-block">
+        <h6 class="text-muted mb-2 fw-bold">5-Day Forecast (Lakewood, CO)</h6>
+        <div class="d-flex gap-2" id="desktop-forecast">
+            <!-- JavaScript will populate the 5 cards here -->
+        </div>
+    </div>
+
+    <!-- Mobile View: Compact Summary (Hidden on desktop) -->
+    <div class="d-block d-md-none bg-white p-3 rounded shadow-sm border border-light text-center">
+        <div id="mobile-forecast" class="fw-medium text-dark" style="font-size: 0.95rem;">Loading local forecast...</div>
+    </div>
+</div>
+
+<!-- Inventory Sections -->
 <div class="d-flex justify-content-between align-items-center mb-3">
     <h3 class="mb-0">Inventory Sections</h3>
 </div>
@@ -53,4 +78,80 @@
         <div class="col-12 p-4 text-center text-muted">No sections created yet. Visit Admin to set them up!</div>
     {% endfor %}
 </div>
+
+<!-- Weather Fetching Script -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    // Open-Meteo API updated for 80227 (Lakewood, CO: Lat 39.6384, Lon -105.0939)
+    const weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=39.6384&longitude=-105.0939&daily=weathercode,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America%2FDenver";
+
+    fetch(weatherUrl)
+        .then(response => response.json())
+        .then(data => {
+            const daily = data.daily;
+            let hasRainOrSnow = false;
+            let conditionType = "";
+            let desktopHtml = "";
+            
+            // Map WMO weather codes to emojis and types
+            const getWeatherDetails = (code) => {
+                if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99)) return { icon: "🌧️", type: "rain" };
+                if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return { icon: "❄️", type: "snow" };
+                if (code >= 1 && code <= 3) return { icon: "⛅", type: "clouds" };
+                return { icon: "☀️", type: "clear skies" };
+            };
+
+            // Loop through the 5 days to build the desktop cards
+            for (let i = 0; i < 5; i++) {
+                // T12:00:00 forces noon to avoid timezone date-shifting bugs
+                const date = new Date(daily.time[i] + 'T12:00:00'); 
+                const dayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                const monthDay = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                const max = Math.round(daily.temperature_2m_max[i]);
+                const min = Math.round(daily.temperature_2m_min[i]);
+                const details = getWeatherDetails(daily.weathercode[i]);
+
+                // Check for restaurant trigger conditions
+                if (details.type === "rain" || details.type === "snow") {
+                    hasRainOrSnow = true;
+                    conditionType = details.type;
+                }
+
+                desktopHtml += `
+                    <div class="card flex-fill text-center border-0 shadow-sm" style="background-color: #f8f9fa;">
+                        <div class="card-body p-2">
+                            <div class="fw-bold">${dayName}</div>
+                            <div class="text-muted" style="font-size: 0.75rem;">${monthDay}</div>
+                            <div class="fs-4 my-1">${details.icon}</div>
+                            <div style="font-size: 0.85rem;">
+                                <span class="text-danger fw-bold">${max}°</span> / <span class="text-primary">${min}°</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+
+            // Inject Desktop HTML
+            document.getElementById('desktop-forecast').innerHTML = desktopHtml;
+
+            // Inject Mobile HTML (Showing Tomorrow's weather summary)
+            const tmrwDetails = getWeatherDetails(daily.weathercode[1]);
+            const tmrwDate = new Date(daily.time[1] + 'T12:00:00').toLocaleDateString('en-US', { weekday: 'long', month: 'short', day: 'numeric' });
+            const tmrwMax = Math.round(daily.temperature_2m_max[1]);
+            document.getElementById('mobile-forecast').innerHTML = 
+                `${tmrwDetails.icon} <strong>${tmrwDate}</strong>: High of ${tmrwMax}°F`;
+
+            // Display the smart alert if rain or snow is detected in the 5-day window
+            if (hasRainOrSnow) {
+                document.getElementById('weather-alert-text').innerText = 
+                    `Most likely ${conditionType} in the next couple days, please double check the needed inventory.`;
+                document.getElementById('weather-alert').classList.remove('d-none');
+            }
+        })
+        .catch(error => {
+            document.getElementById('mobile-forecast').innerText = "Weather widget currently unavailable.";
+            console.error("Weather fetch failed:", error);
+        });
+});
+</script>
 {% endblock %}
