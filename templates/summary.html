@@ -23,10 +23,10 @@
                             <input type="hidden" name="query" value="">
                             <div class="input-group input-group-sm" style="width: 155px;">
                                 <button class="btn btn-outline-danger fw-bold px-2" type="button" onclick="adjustQty(this, -1)">-</button>
-                                <input type="number" name="quantity_needed" class="form-control text-center fw-bold" value="{{ item.quantity_needed }}" min="0">
+                                <input type="number" name="quantity_needed" class="form-control text-center fw-bold" value="{{ item.quantity_needed }}" min="0" onchange="autoSave(this.closest('form'), this)">
                                 <button class="btn btn-outline-primary fw-bold px-2" type="button" onclick="adjustQty(this, 1)">+</button>
                             </div>
-                            <button type="submit" class="btn btn-outline-success btn-sm">Set</button>
+                            <!-- The Set button has been removed -->
                         </form>
                     </li>
                     {% endfor %}
@@ -44,12 +44,31 @@
 
 <script>
     function adjustQty(btn, change) {
-        const inputGroup = btn.closest('.input-group');
-        const input = inputGroup.querySelector('input[type="number"]');
+        const form = btn.closest('form');
+        const input = form.querySelector('input[type="number"]');
         let currentValue = parseInt(input.value) || 0;
         let newValue = currentValue + change;
         if (newValue < 0) newValue = 0;
         input.value = newValue;
+        
+        // Trigger auto-save in the background
+        autoSave(form, input);
+    }
+
+    function autoSave(form, inputElement) {
+        const formData = new FormData(form);
+        
+        // Send the data to Flask invisibly
+        fetch(form.action, {
+            method: 'POST',
+            body: formData
+        }).then(() => {
+            // Visual feedback: flashes the number green for half a second
+            inputElement.style.color = '#198754'; 
+            setTimeout(() => {
+                inputElement.style.color = ''; 
+            }, 500);
+        }).catch(err => console.error("Auto-save failed", err));
     }
 </script>
 {% endblock %}
