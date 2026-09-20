@@ -1,5 +1,30 @@
 {% extends "base.html" %}
 {% block content %}
+<style>
+    /* Default sizes for mobile phones */
+    .profile-avatar {
+        aspect-ratio: 1/1; 
+        object-fit: cover; 
+        border: 3px solid #fff;
+        width: 100%;
+        max-width: 100px; 
+    }
+    .profile-name {
+        font-size: 0.85rem;
+    }
+    
+    /* When the screen is wider than 768px (tablets and desktops), scale up */
+    @media (min-width: 768px) {
+        .profile-avatar {
+            max-width: 180px; /* Makes the images much bigger */
+            border-width: 5px;
+        }
+        .profile-name {
+            font-size: 1.25rem; /* Makes the names larger and easier to read */
+        }
+    }
+</style>
+
 <!-- Quick Search Bar on Home Screen -->
 <form method="GET" action="/search" class="mb-4">
     <div class="input-group input-group-lg shadow-sm">
@@ -12,15 +37,20 @@
     <h3 class="mb-0">Inventory Sections</h3>
 </div>
 
-<!-- Your existing sections/items list goes here -->
-<div class="list-group shadow-sm">
+<!-- 3-Column Profile Grid -->
+<div class="row g-3">
     {% for section in sections %}
-        <a href="/section/{{ section.id }}" class="list-group-item list-group-item-action d-flex justify-content-between align-items-center py-3">
-            <span class="fs-5 fw-semibold">{{ section.name }}</span>
-            <span class="badge bg-secondary rounded-pill">View</span>
-        </a>
+        <div class="col-4 text-center mb-4">
+            <a href="/section/{{ section.id }}" class="text-decoration-none text-dark d-block">
+                {% set image_name = section.name | lower | replace(' ', '_') ~ '.jpg' %}
+                <img src="{{ url_for('static', filename='images/' ~ image_name) }}" 
+                     class="img-fluid rounded-circle shadow-sm mb-2 profile-avatar" 
+                     alt="{{ section.name }}">
+                <div class="fw-bold lh-sm text-break profile-name">{{ section.name }}</div>
+            </a>
+        </div>
     {% else %}
-        <div class="p-4 text-center text-muted">No sections created yet. Visit Admin to set them up!</div>
+        <div class="col-12 p-4 text-center text-muted">No sections created yet. Visit Admin to set them up!</div>
     {% endfor %}
 </div>
 {% endblock %}
