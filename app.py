@@ -241,4 +241,5 @@ def view_history():
 
 if __name__ == '__main__':
     # host='0.0.0.0' allows external access from your mobile device on the local network
-    app.run(host='10.0.0.72', port=5001, debug=True) # allow external access from your mobile device on the local network
+    # app.run(host='10.0.0.72', port=5001, debug=True) # allow external access from your mobile device on the local network
+    app.run(host='0.0.0.0', port=5001, debug=True)
