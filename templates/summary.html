@@ -1,45 +1,45 @@
 {% extends "base.html" %}
 {% block content %}
-<div class="d-flex justify-content-between align-items-center mb-3">
-    <h3>Shopping Export (Cart)</h3>
-    <div>
-        <a href="/export_layout" class="btn btn-primary btn-sm me-1">Export Layout</a>
-        <a href="/" class="btn btn-secondary btn-sm">Back</a>
+<div class="d-flex flex-column flex-sm-row justify-content-between align-items-sm-center mb-3 gap-2">
+    <h3 class="mb-0 fw-bold">Shopping List</h3>
+    <div class="d-flex gap-2">
+        <a href="/export_layout" class="btn btn-primary btn-sm flex-grow-1 text-center">Export Layout</a>
+        <a href="/" class="btn btn-secondary btn-sm flex-grow-1 text-center">Back</a>
     </div>
 </div>
 
-<div class="card shadow-sm mb-4">
-    <div class="card-body">
-        {% if grouped_list %}
-            {% for store, items in grouped_list.items() %}
-                <h5 class="text-primary mt-4 border-bottom pb-1">{{ store }}</h5>
-                <ul class="list-group list-group-flush mb-2">
-                    {% for item in items %}
-                    <li class="list-group-item d-flex justify-content-between align-items-center py-2 px-0">
-                        <span class="fw-medium">{{ item.name }}</span>
-                        
-                        <!-- Inline Cart Quantity Update -->
-                        <form method="POST" action="/update_search_qty/{{ item.id }}" class="d-flex align-items-center gap-2">
-                            <input type="hidden" name="query" value="">
-                            <div class="input-group input-group-sm" style="width: 155px;">
-                                <button class="btn btn-outline-danger fw-bold px-2" type="button" onclick="adjustQty(this, -1)">-</button>
-                                <input type="number" name="quantity_needed" class="form-control text-center fw-bold" value="{{ item.quantity_needed }}" min="0" onchange="autoSave(this.closest('form'), this)">
-                                <button class="btn btn-outline-primary fw-bold px-2" type="button" onclick="adjustQty(this, 1)">+</button>
-                            </div>
-                            <!-- The Set button has been removed -->
-                        </form>
-                    </li>
-                    {% endfor %}
-                </ul>
-            {% endfor %}
-        {% else %}
-            <p class="text-muted mb-0">No items needed. All quantities are zero.</p>
-        {% endif %}
+{% if grouped_list %}
+    <div class="shopping-grid mb-4">
+        {% for store, items in grouped_list.items() %}
+        <!-- The data-store attribute tells the CSS which solid color to apply -->
+        <div class="retailer-card" data-store="{{ store }}">
+            <h4 class="mb-3 fw-bold border-bottom pb-2" style="border-color: rgba(255,255,255,0.2) !important;">{{ store }}</h4>
+            
+            <ul class="list-unstyled mb-0">
+                {% for item in items %}
+                <li class="d-flex justify-content-between align-items-center py-2 border-bottom" style="border-color: rgba(255,255,255,0.15) !important;">
+                    <span class="fw-medium">{{ item.name }}</span>
+                    
+                    <form method="POST" action="/update_search_qty/{{ item.id }}" class="d-flex align-items-center mb-0">
+                        <input type="hidden" name="query" value="">
+                        <div class="input-group input-group-sm" style="width: 120px; background: rgba(255,255,255,0.85); border-radius: 6px; padding: 2px;">
+                            <button class="btn btn-sm fw-bold border-0 text-danger" type="button" onclick="adjustQty(this, -1)">-</button>
+                            <input type="number" name="quantity_needed" class="form-control form-control-sm text-center fw-bold border-0 bg-transparent text-dark" value="{{ item.quantity_needed }}" min="0" onchange="autoSave(this.closest('form'), this)">
+                            <button class="btn btn-sm fw-bold border-0 text-primary" type="button" onclick="adjustQty(this, 1)">+</button>
+                        </div>
+                    </form>
+                </li>
+                {% endfor %}
+            </ul>
+        </div>
+        {% endfor %}
     </div>
-</div>
+{% else %}
+    <div class="alert alert-light shadow-sm text-muted mb-4">No items needed. All quantities are zero.</div>
+{% endif %}
 
 <form method="POST" action="/clear_list" onsubmit="return confirm('Are you sure you want to reset all inventory counts to zero?');">
-    <button type="submit" class="btn btn-danger w-100 touch-btn">Complete Shopping (Clear List)</button>
+    <button type="submit" class="btn btn-danger w-100 touch-btn shadow-sm">Complete Shopping (Clear List)</button>
 </form>
 
 <script>
