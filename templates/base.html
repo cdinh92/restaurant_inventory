@@ -5,36 +5,288 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Inventory</title>
     
-    <!-- Custom App Icons for Mobile Home Screen -->
     <link rel="icon" type="image/png" href="{{ url_for('static', filename='images/app_icon.png') }}">
     <link rel="apple-touch-icon" href="{{ url_for('static', filename='images/app_icon.png') }}">
     
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
-        body { background-color: #f8fafc; }
+        /* Global Aesthetics & Body Background */
+        body {
+            margin: 0;
+            font-family: system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+            color: #1e293b;
+            min-height: 100vh;
+        }
+
         .touch-btn { padding: 12px; font-size: 1.1rem; }
+
+        /* App Layout Setup */
+        .app-wrapper {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Modern Left Sidebar */
+        .sidebar {
+            width: 260px;
+            background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+            padding: 2rem 1.5rem;
+            flex-shrink: 0;
+            box-shadow: 4px 0 15px rgba(0,0,0,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+
+        .sidebar-brand {
+            font-size: 1.5rem;
+            font-weight: 800;
+            margin-bottom: 2.5rem;
+            background: linear-gradient(90deg, #38bdf8, #818cf8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .sidebar-nav {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+
+        .sidebar-nav a {
+            display: flex;
+            align-items: center;
+            padding: 0.85rem 1.25rem;
+            color: #94a3b8;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: all 0.2s ease;
+        }
+
+        .sidebar-nav a:hover, .sidebar-nav a.active {
+            background: rgba(255, 255, 255, 0.1);
+            color: #f8fafc;
+            transform: translateX(4px);
+        }
+
+        /* Main Content Area */
+        .main-content {
+            flex-grow: 1;
+            padding: 2.5rem;
+            max-width: 1400px;
+            margin: 0 auto;
+            overflow-y: auto;
+        }
+
+        /* Responsive Retailer Shopping Cards (CSS Grid) */
+        .shopping-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 1.5rem;
+            margin-top: 1.5rem;
+        }
+
+        @media (min-width: 768px) {
+            .shopping-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        .retailer-card {
+            padding: 1.75rem;
+            border-radius: 16px;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+            transition: transform 0.2s ease, box-shadow 0.2s ease;
+            border: none;
+        }
+
+        .retailer-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.15);
+        }
+
+        /* Solid Theme Colors for Specific Retailers */
+        .retailer-card { 
+            background-color: #475569; /* Default slate gray fallback */
+            color: #ffffff; 
+        }
+        
+        /* Costco: Signature Red */
+        .retailer-card[data-store*="costco" i] { 
+            background-color: #E31837; 
+        }
+        
+        /* Sam's Club: Signature Blue */
+        .retailer-card[data-store*="sam" i] { 
+            background-color: #0067A0; 
+        }
+        
+        /* Restaurant Depot: Deep Navy Blue */
+        .retailer-card[data-store*="restaurant" i], .retailer-card[data-store*="depot" i] { 
+            background-color: #1E3A8A; 
+        }
+        
+        /* Vietnamese Market: Fresh Lettuce Green */
+        .retailer-card[data-store*="viet" i], .retailer-card[data-store*="market" i] { 
+            background-color: #4CAF50; 
+        }
+
+        /* Mobile Sidebar Responsiveness */
+        @media (max-width: 768px) {
+            .app-wrapper {
+                flex-direction: column;
+            }
+            .sidebar {
+                width: 100%;
+                padding: 1rem;
+                flex-direction: column; 
+                align-items: center;
+            }
+            .sidebar-brand {
+                margin-bottom: 1rem;
+            }
+            .sidebar-nav {
+                flex-direction: row;
+                flex-wrap: wrap; /* Allows items to wrap to a second line */
+                justify-content: center;
+                gap: 0.5rem; /* Adds spacing between the buttons */
+                width: 100%;
+            }
+            .sidebar-nav li {
+                flex: 0 0 auto;
+            }
+            .sidebar-nav a {
+                padding: 0.5rem 0.85rem;
+                font-size: 0.9rem;
+                background: rgba(255, 255, 255, 0.05); /* Gives them a slight button appearance */
+                border: 1px solid rgba(255, 255, 255, 0.1);
+            }
+            .main-content {
+                padding: 1.5rem 1rem;
+            }
+        }
+        
     </style>
 </head>
 <body>
-    <!-- Top Navigation Bar -->
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark mb-4 shadow-sm">
-        <div class="container-fluid">
-            <a class="navbar-brand fw-bold" href="/">📦 Inventory</a>
-            <div class="d-flex align-items-center gap-3">
-                <!-- Search Icon Link -->
-                <a class="nav-link text-white fs-4" href="/search" title="Search">🔍</a>
-                <!-- Shopping Cart Icon Link -->
-                <a class="nav-link text-white fs-4" href="/shopping_list" title="Shopping List">🛒</a>
-                <a class="btn btn-outline-light btn-sm" href="/admin">Admin</a>
-            </div>
-        </div>
-    </nav>
+    <div class="app-wrapper">
+        <!-- Persistent Left Sidebar -->
+        <nav class="sidebar">
+            <div class="sidebar-brand">📦 Inventory</div>
+            <ul class="sidebar-nav">
+                <li><a href="/">🏠 Dashboard</a></li>
+                <li><a href="/shopping_list">🛒 Shopping</a></li>
+                <li><a href="/admin">⚙️ Admin</a></li>
+                <li><a href="/history">📜 History</a></li>
+                <li><a href="/export_layout">📤 Export Layout</a></li>
+            </ul>
 
-    <!-- Main Content Container -->
-    <div class="container pb-5">
-        {% block content %}{% endblock %}
+            <!-- NEW: Sidebar Weather Widget (Hidden on Mobile) -->
+            <div class="d-none d-md-block mt-4 pt-4 border-top" style="border-color: rgba(255,255,255,0.1) !important;">
+                <div class="text-uppercase fw-bold mb-3" style="color: #64748b; font-size: 0.75rem; letter-spacing: 0.5px;">Forecast (Lakewood)</div>
+                
+                <!-- Smart Alert -->
+                <div id="weather-alert" class="alert d-none p-2 mb-3" style="background: rgba(245, 158, 11, 0.15); border: 1px solid rgba(245, 158, 11, 0.3); color: #fbbf24; font-size: 0.8rem;" role="alert">
+                    <span id="weather-alert-text"></span>
+                </div>
+
+                <!-- 5-Day Vertical List -->
+                <div id="sidebar-forecast" class="d-flex flex-column gap-2">
+                    <div class="text-muted small">Loading weather...</div>
+                </div>
+            </div>
+        </nav>
+
+        <!-- Dynamic Main Content -->
+        <main class="main-content">
+            {% block content %}{% endblock %}
+        </main>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    <!-- Sidebar Weather Fetching Script -->
+    <script>
+    document.addEventListener("DOMContentLoaded", function() {
+        const weatherUrl = "https://api.open-meteo.com/v1/forecast?latitude=39.6384&longitude=-105.0939&daily=weathercode,temperature_2m_max,temperature_2m_min&temperature_unit=fahrenheit&timezone=America%2FDenver";
+
+        fetch(weatherUrl)
+            .then(response => response.json())
+            .then(data => {
+                const daily = data.daily;
+                let sidebarHtml = "";
+                let rainDays = [];
+                let snowDays = [];
+                
+                const getWeatherDetails = (code) => {
+                    if ((code >= 51 && code <= 67) || (code >= 80 && code <= 82) || (code >= 95 && code <= 99)) return { icon: "🌧️", type: "rain" };
+                    if ((code >= 71 && code <= 77) || (code >= 85 && code <= 86)) return { icon: "❄️", type: "snow" };
+                    if (code >= 1 && code <= 3) return { icon: "⛅", type: "clouds" };
+                    return { icon: "☀️", type: "clear skies" };
+                };
+
+                // Build compact vertical cards for the sidebar
+                for (let i = 0; i < 5; i++) {
+                    const date = new Date(daily.time[i] + 'T12:00:00'); 
+                    const shortDayName = date.toLocaleDateString('en-US', { weekday: 'short' });
+                    const max = Math.round(daily.temperature_2m_max[i]);
+                    const min = Math.round(daily.temperature_2m_min[i]);
+                    const details = getWeatherDetails(daily.weathercode[i]);
+
+                    if (details.type === "rain") rainDays.push(shortDayName);
+                    if (details.type === "snow") snowDays.push(shortDayName);
+
+                    sidebarHtml += `
+                        <div class="d-flex justify-content-between align-items-center rounded p-2" style="background: rgba(255,255,255,0.05); transition: background 0.2s;">
+                            <div class="d-flex align-items-center gap-2">
+                                <span class="fs-6">${details.icon}</span>
+                                <span class="fw-medium" style="color: #cbd5e1; font-size: 0.85rem;">${shortDayName}</span>
+                            </div>
+                            <div style="font-size: 0.8rem;">
+                                <span style="color: #f87171;">${max}°</span>
+                                <span style="color: #475569; margin: 0 2px;">|</span>
+                                <span style="color: #38bdf8;">${min}°</span>
+                            </div>
+                        </div>
+                    `;
+                }
+
+                const forecastContainer = document.getElementById('sidebar-forecast');
+                if(forecastContainer) forecastContainer.innerHTML = sidebarHtml;
+
+                // Smart Alert Logic & Mobile Pop-up Message
+                if (rainDays.length > 0 || snowDays.length > 0) {
+                    let alertParts = [];
+                    if (rainDays.length > 0) alertParts.push(`rain on ${rainDays.join(", ")}`);
+                    if (snowDays.length > 0) alertParts.push(`snow on ${snowDays.join(", ")}`);
+
+                    // Formats the specific requested string
+                    const alertMessage = `Weather Alert: Expect ${alertParts.join(" and ")}. Please review the orders.`;
+
+                    // Push to Desktop Sidebar
+                    const alertText = document.getElementById('weather-alert-text');
+                    const alertBox = document.getElementById('weather-alert');
+                    if(alertText && alertBox) {
+                        alertText.innerText = alertMessage;
+                        alertBox.classList.remove('d-none');
+                    }
+
+                    // Push to Mobile Dashboard Pop-up
+                    const mobileAlertText = document.getElementById('mobile-alert-text');
+                    const mobileAlertBox = document.getElementById('mobile-weather-alert');
+                    if(mobileAlertText && mobileAlertBox) {
+                        mobileAlertText.innerText = alertMessage;
+                        // Replace 'd-none' to make it display solely on mobile devices
+                        mobileAlertBox.className = "d-block d-md-none"; 
+                    }
+                }
+            })
+            .catch(error => console.error("Weather fetch failed:", error));
+    });
+    </script>
 </body>
 </html>
