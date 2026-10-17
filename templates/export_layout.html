@@ -106,16 +106,38 @@
                 {% endfor %}
             </ul>
         </div>
-        <!-- Bottom Left: Costco & Walmart -->
-        <div class="quadrant" data-section="bottom_left">
-            <h5>{{ quadrants.bottom_left.title }}</h5>
+        
+        <!-- Bottom Left: Costco & Walmart & Owner -->
+        <div class="quadrant" data-section="bottom_left">     
+            <!-- Costco Section -->
+            <h5>Costco</h5>
             <ul class="list-unstyled">
                 {% for item in quadrants.bottom_left['items'] %}
-                    <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
-                {% else %}
-                    <li class="text-muted fs-5">No items needed.</li>
+                    {% if 'owner' not in item.name|lower and item.store|lower == 'costco' %}
+                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    {% endif %}
                 {% endfor %}
             </ul>
+
+            <!-- Walmart Section -->
+            <h5 class="mt-4">Walmart</h5>
+            <ul class="list-unstyled">
+                {% for item in quadrants.bottom_left['items'] %}
+                    {% if 'owner' not in item.name|lower and item.store|lower == 'walmart' %}
+                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>
+
+            <!-- Owner Section -->
+            <h5 class="mt-4">Owner</h5>
+            <ul class="list-unstyled">
+                {% for item in quadrants.bottom_left['items'] %}
+                    {% if 'owner' in item.name|lower %}
+                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    {% endif %}
+                {% endfor %}
+            </ul>    
         </div>
         <!-- Bottom Right: Sam's Club -->
         <div class="quadrant" data-section="bottom_right">
