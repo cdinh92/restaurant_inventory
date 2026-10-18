@@ -18,11 +18,20 @@
             margin: 0 auto;
             padding: 0.4in;
             box-shadow: 0 4px 15px rgba(0,0,0,0.15);
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            grid-template-rows: 1.3fr 0.7fr;
+            /* Changed from grid to flex for dynamic column heights */
+            display: flex; 
             gap: 20px;
             box-sizing: border-box;
+        }
+
+        /* New wrapper to separate the left and right sides */
+        .page-column {
+            flex: 1; /* Split width exactly 50/50 */
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            height: 100%;
+            overflow: hidden; 
         }
         
         .quadrant {
@@ -32,6 +41,9 @@
             overflow-y: auto;
             background: #fafafa;
             font-size: 1.5rem; /* Default large font size */
+            /* Flex properties allow the box to wrap tightly to its content */
+            flex: 0 1 auto; 
+            height: max-content;
         }
         
         .quadrant h5 {
@@ -84,132 +96,39 @@
     </div>
 
     <div id="captureArea" class="letter-page">
-        <!-- Top Left: Restaurant Depot -->
-        <div class="quadrant" data-section="top_left">
-            <h5>{{ quadrants.top_left.title }}</h5>
-            <ul class="list-unstyled">
-                {% for item in quadrants.top_left['items'] %}
-                    <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
-                {% else %}
-                    <li class="text-muted fs-5">No items needed.</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <!-- Top Right: Vietnamese Markets -->
-        <div class="quadrant" data-section="top_right">
-            <h5>{{ quadrants.top_right.title }}</h5>
-            <ul class="list-unstyled">
-                {% for item in quadrants.top_right['items'] %}
-                    <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
-                {% else %}
-                    <li class="text-muted fs-5">No items needed.</li>
-                {% endfor %}
-            </ul>
-        </div>
-        <!-- Bottom Left: Costco, Walmart & Owner -->
-        <div class="quadrant" data-section="bottom_left">
-            
-            {% set all_items = quadrants.bottom_left['items'] | default([]) %}
-            {% set ns = namespace(has_costco=false, has_walmart=false, has_owner=false) %}
-
-            <!-- Pre-check which categories exist -->
-            {% for item in all_items %}
-                {% set item_name = item.name|lower %}
-                {% if 'owner' in item_name %}
-                    {% set ns.has_owner = true %}
-                {% elif 'walmart' in item_name or 'hanh baro' in item_name %}
-                    {% set ns.has_walmart = true %}
-                {% else %}
-                    {% set ns.has_costco = true %}
-                {% endif %}
-            {% endfor %}
-
-            <!-- Costco Section -->
-            {% if ns.has_costco %}
-                <h5 class="mb-2">Costco</h5>
+        
+        <!-- LEFT COLUMN -->
+        <div class="page-column">
+            <!-- Top Left: Restaurant Depot -->
+            <div class="quadrant" data-section="top_left">
+                <h5>{{ quadrants.top_left.title }}</h5>
                 <ul class="list-unstyled">
-                    {% for item in all_items %}
-                        {% set item_name = item.name|lower %}
-                        {% if 'owner' not in item_name and 'walmart' not in item_name and 'hanh baro' not in item_name %}
-                            <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
-                        {% endif %}
+                    {% for item in quadrants.top_left['items'] %}
+                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    {% else %}
+                        <li class="text-muted fs-5">No items needed.</li>
                     {% endfor %}
                 </ul>
-            {% endif %}
+            </div>
 
-            <!-- Walmart Section -->
-            {% if ns.has_walmart %}
-                <h5 class="{% if ns.has_costco %}mt-3{% endif %} mb-2">Walmart</h5>
-                <ul class="list-unstyled">
-                    {% for item in all_items %}
-                        {% set item_name = item.name|lower %}
-                        {% if 'owner' not in item_name and ('walmart' in item_name or 'hanh baro' in item_name) %}
-                            <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
-            {% endif %}
+            <!-- Bottom Left: Costco, Walmart & Owner -->
+            <div class="quadrant" data-section="bottom_left">
+                
+                {% set all_items = quadrants.bottom_left['items'] | default([]) %}
+                {% set ns = namespace(has_costco=false, has_walmart=false, has_owner=false) %}
 
-            <!-- Owner Section -->
-            {% if ns.has_owner %}
-                <h5 class="{% if ns.has_costco or ns.has_walmart %}mt-3{% endif %} mb-2">Owner</h5>
-                <ul class="list-unstyled">
-                    {% for item in all_items %}
-                        {% if 'owner' in item.name|lower %}
-                            <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
-                        {% endif %}
-                    {% endfor %}
-                </ul>
-            {% endif %}
-
-            <!-- Fallback if quadrant is completely empty -->
-            {% if not all_items %}
-                <h5>Costco & Walmart</h5>
-                <ul class="list-unstyled">
-                    <li class="text-muted fs-5">No items needed.</li>
-                </ul>
-            {% endif %}
-            
-        </div>
-        <!-- Bottom Right: Sam's Club -->
-        <div class="quadrant" data-section="bottom_right">
-            <h5>{{ quadrants.bottom_right.title }}</h5>
-            <ul class="list-unstyled">
-                {% for item in quadrants.bottom_right['items'] %}
-                    <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
-                {% else %}
-                    <li class="text-muted fs-5">No items needed.</li>
+                <!-- Pre-check which categories exist -->
+                {% for item in all_items %}
+                    {% set item_name = item.name|lower %}
+                    {% if 'owner' in item_name %}
+                        {% set ns.has_owner = true %}
+                    {% elif 'walmart' in item_name or 'hanh baro' in item_name %}
+                        {% set ns.has_walmart = true %}
+                    {% else %}
+                        {% set ns.has_costco = true %}
+                    {% endif %}
                 {% endfor %}
-            </ul>
-        </div>
-    </div>
 
-    <script>
-        // Automatically switch sections with many items to compact 2-column mode
-        document.addEventListener("DOMContentLoaded", function() {
-            const quadrants = document.querySelectorAll('.quadrant');
-            quadrants.forEach(quad => {
-                const items = quad.querySelectorAll('li');
-                // If a section has more than 6 items, trigger compact text and 2 columns
-                if (items.length > 6) {
-                    quad.classList.add('compact-mode');
-                    const ul = quad.querySelector('ul');
-                    if (ul) {
-                        ul.classList.add('multi-col');
-                    }
-                }
-            });
-        });
-
-        function downloadPNG() {
-            const captureElement = document.getElementById('captureArea');
-            html2canvas(captureElement, { scale: 2 }).then(canvas => {
-                const link = document.createElement('a');
-                link.download = 'shopping-list-export-{{ export_date }}.png';
-                link.href = canvas.toDataURL('image/png');
-                link.click();
-            });
-        }
-    </script>
-</body>
-</html>
+                <!-- Costco Section -->
+                {% if ns.has_costco %}
+                    <h5 class="mb-2">Costco</h5>
