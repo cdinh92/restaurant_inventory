@@ -104,7 +104,7 @@
                 <h5>{{ quadrants.top_left.title }}</h5>
                 <ul class="list-unstyled">
                     {% for item in quadrants.top_left['items'] %}
-                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                        <li class="mb-3"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                     {% else %}
                         <li class="text-muted fs-5">No items needed.</li>
                     {% endfor %}
@@ -139,7 +139,7 @@
                             {% set item_name = item.name|lower %}
                             {% set item_store = item.store|default('')|lower %}
                             {% if 'owner' not in item_name and 'walmart' not in item_store %}
-                                <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                                <li class="mb-2"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                             {% endif %}
                         {% endfor %}
                     </ul>
@@ -153,7 +153,7 @@
                             {% set item_name = item.name|lower %}
                             {% set item_store = item.store|default('')|lower %}
                             {% if 'owner' not in item_name and 'walmart' in item_store %}
-                                <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                                <li class="mb-2"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                             {% endif %}
                         {% endfor %}
                     </ul>
@@ -165,7 +165,7 @@
                     <ul class="list-unstyled">
                         {% for item in all_items %}
                             {% if 'owner' in item.name|lower %}
-                                <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                                <li class="mb-2"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                             {% endif %}
                         {% endfor %}
                     </ul>
@@ -189,7 +189,7 @@
                 <h5>{{ quadrants.top_right.title }}</h5>
                 <ul class="list-unstyled">
                     {% for item in quadrants.top_right['items'] %}
-                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                        <li class="mb-3"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                     {% else %}
                         <li class="text-muted fs-5">No items needed.</li>
                     {% endfor %}
@@ -201,7 +201,7 @@
                 <h5>{{ quadrants.bottom_right.title }}</h5>
                 <ul class="list-unstyled">
                     {% for item in quadrants.bottom_right['items'] %}
-                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                        <li class="mb-3"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                     {% else %}
                         <li class="text-muted fs-5">No items needed.</li>
                     {% endfor %}
