@@ -132,3 +132,107 @@
                 <!-- Costco Section -->
                 {% if ns.has_costco %}
                     <h5 class="mb-2">Costco</h5>
+                    <ul class="list-unstyled">
+                        {% for item in all_items %}
+                            {% set item_name = item.name|lower %}
+                            {% if 'owner' not in item_name and 'walmart' not in item_name and 'hanh baro' not in item_name %}
+                                <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <!-- Walmart Section -->
+                {% if ns.has_walmart %}
+                    <h5 class="{% if ns.has_costco %}mt-3{% endif %} mb-2">Walmart</h5>
+                    <ul class="list-unstyled">
+                        {% for item in all_items %}
+                            {% set item_name = item.name|lower %}
+                            {% if 'owner' not in item_name and ('walmart' in item_name or 'hanh baro' in item_name) %}
+                                <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <!-- Owner Section -->
+                {% if ns.has_owner %}
+                    <h5 class="{% if ns.has_costco or ns.has_walmart %}mt-3{% endif %} mb-2">Owner</h5>
+                    <ul class="list-unstyled">
+                        {% for item in all_items %}
+                            {% if 'owner' in item.name|lower %}
+                                <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <!-- Fallback if quadrant is completely empty -->
+                {% if not all_items %}
+                    <h5>Costco & Walmart</h5>
+                    <ul class="list-unstyled">
+                        <li class="text-muted fs-5">No items needed.</li>
+                    </ul>
+                {% endif %}
+                
+            </div>
+        </div>
+
+        <!-- RIGHT COLUMN -->
+        <div class="page-column">
+            <!-- Top Right: Vietnamese Markets -->
+            <div class="quadrant" data-section="top_right">
+                <h5>{{ quadrants.top_right.title }}</h5>
+                <ul class="list-unstyled">
+                    {% for item in quadrants.top_right['items'] %}
+                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    {% else %}
+                        <li class="text-muted fs-5">No items needed.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+
+            <!-- Bottom Right: Sam's Club -->
+            <div class="quadrant" data-section="bottom_right">
+                <h5>{{ quadrants.bottom_right.title }}</h5>
+                <ul class="list-unstyled">
+                    {% for item in quadrants.bottom_right['items'] %}
+                        <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                    {% else %}
+                        <li class="text-muted fs-5">No items needed.</li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+
+    </div>
+
+    <script>
+        // Automatically switch sections with many items to compact 2-column mode
+        document.addEventListener("DOMContentLoaded", function() {
+            const quadrants = document.querySelectorAll('.quadrant');
+            quadrants.forEach(quad => {
+                const items = quad.querySelectorAll('li');
+                // If a section has more than 6 items, trigger compact text and 2 columns
+                if (items.length > 6) {
+                    quad.classList.add('compact-mode');
+                    const ul = quad.querySelector('ul');
+                    if (ul) {
+                        ul.classList.add('multi-col');
+                    }
+                }
+            });
+        });
+
+        function downloadPNG() {
+            const captureElement = document.getElementById('captureArea');
+            html2canvas(captureElement, { scale: 2 }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'shopping-list-export-{{ export_date }}.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+            });
+        }
+    </script>
+</body>
+</html>
