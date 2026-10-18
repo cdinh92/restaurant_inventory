@@ -2,7 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for
 from models import db, Store, Section, Item, seed_database
 import os
 import difflib # for searching bar
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from flask import session # add protection for section PINs
 
@@ -15,6 +15,44 @@ app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///restaurant.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
 
 db.init_app(app)
+
+# Create a file to store the last activity timestamp
+TIMESTAMP_FILE = os.path.join(app.instance_path, 'last_activity.txt')
+
+def update_activity_timer():
+    """Saves the current time to the text file."""
+    os.makedirs(app.instance_path, exist_ok=True) 
+    with open(TIMESTAMP_FILE, 'w') as f:
+        f.write(datetime.now().isoformat())
+
+def clear_activity_timer():
+    """Removes the timer file once the list is cleared."""
+    if os.path.exists(TIMESTAMP_FILE):
+        os.remove(TIMESTAMP_FILE)
+
+@app.before_request
+def auto_clear_expired_list():
+    """Checks the timer before every page load."""
+    if os.path.exists(TIMESTAMP_FILE):
+        try:
+            with open(TIMESTAMP_FILE, 'r') as f:
+                last_active_str = f.read().strip()
+            
+            if last_active_str:
+                last_active = datetime.fromisoformat(last_active_str)
+                
+                # Check if 48 hours have passed
+                if datetime.now() - last_active > timedelta(hours=48):
+                    items = Item.query.all()
+                    for item in items:
+                        item.quantity_needed = 0
+                    db.session.commit()
+                    clear_activity_timer()
+                    
+        except Exception as e:
+            print(f"Timer error: {e}")
+            clear_activity_timer()
+
 # Create a new table for shopping history
 class ShoppingHistory(db.Model):
     id = db.Column(db.Integer, primary_key=True)
@@ -40,6 +78,7 @@ def manage_section(section_id):
             qty = request.form.get(f'quantity_needed_{item.id}', item.quantity_needed, type=int)
             item.quantity_needed = max(0, qty)
         db.session.commit()
+        update_activity_timer() # Update the activity timer whenever a section is updated
         return redirect(url_for('manage_section', section_id=section.id))
         
     return render_template('section.html', section=section, items=items)
@@ -63,6 +102,7 @@ def update_item_qty(item_id):
         qty = int(request.form.get('quantity_needed', 0))
         item.quantity_needed = max(0, qty)
         db.session.commit()
+        update_activity_timer() # Update the activity timer whenever an item is updated
     except ValueError:
         pass
     
@@ -91,6 +131,7 @@ def clear_list():
     for item in items:
         item.quantity_needed = 0
     db.session.commit()
+    clear_activity_timer() # Clear the activity timer since the list is now empty
     return redirect(url_for('index'))
 
 ADMIN_PIN = "1234" # You can change this master PIN to whatever you like!
@@ -173,6 +214,7 @@ def update_search_qty(item_id):
         qty = int(request.form.get('quantity_needed', 0))
         item.quantity_needed = max(0, qty)
         db.session.commit()
+        update_activity_timer() # Update the activity timer whenever an item is updated
     except ValueError:
         pass
     
