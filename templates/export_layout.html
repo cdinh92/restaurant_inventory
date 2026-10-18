@@ -109,11 +109,16 @@
         <!-- Bottom Left: Costco, Walmart & Owner -->
         <div class="quadrant" data-section="bottom_left">
             
+            <!-- Safely fetch lists with a fallback to empty lists to prevent crashes -->
+            {% set c_items = quadrants.bottom_left.costco_items | default([]) %}
+            {% set w_items = quadrants.bottom_left.walmart_items | default([]) %}
+            {% set combined_items = c_items + w_items %}
+
             <!-- Costco Section -->
-            {% if quadrants.bottom_left['costco_items'] %}
+            {% if c_items %}
                 <h5>Costco</h5>
                 <ul class="list-unstyled">
-                    {% for item in quadrants.bottom_left['costco_items'] %}
+                    {% for item in c_items %}
                         {% if 'owner' not in item.name|lower %}
                             <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
@@ -122,10 +127,10 @@
             {% endif %}
 
             <!-- Walmart Section -->
-            {% if quadrants.bottom_left['walmart_items'] %}
-                <h5 class="{% if quadrants.bottom_left['costco_items'] %}mt-4{% endif %}">Walmart</h5>
+            {% if w_items %}
+                <h5 class="{% if c_items %}mt-4{% endif %}">Walmart</h5>
                 <ul class="list-unstyled">
-                    {% for item in quadrants.bottom_left['walmart_items'] %}
+                    {% for item in w_items %}
                         {% if 'owner' not in item.name|lower %}
                             <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
@@ -133,18 +138,18 @@
                 </ul>
             {% endif %}
 
-            <!-- Owner Section (Pulls from both lists) -->
-            {% set has_owner = false %}
-            {% for item in quadrants.bottom_left['costco_items'] + quadrants.bottom_left['walmart_items'] %}
+            <!-- Owner Section (Safely pulls from combined lists) -->
+            {% set ns = namespace(has_owner=false) %}
+            {% for item in combined_items %}
                 {% if 'owner' in item.name|lower %}
-                    {% set has_owner = true %}
+                    {% set ns.has_owner = true %}
                 {% endif %}
             {% endfor %}
 
-            {% if has_owner %}
-                <h5 class="{% if quadrants.bottom_left['costco_items'] or quadrants.bottom_left['walmart_items'] %}mt-4{% endif %}">Owner</h5>
+            {% if ns.has_owner %}
+                <h5 class="{% if c_items or w_items %}mt-4{% endif %}">Owner</h5>
                 <ul class="list-unstyled">
-                    {% for item in quadrants.bottom_left['costco_items'] + quadrants.bottom_left['walmart_items'] %}
+                    {% for item in combined_items %}
                         {% if 'owner' in item.name|lower %}
                             <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
@@ -153,14 +158,14 @@
             {% endif %}
 
             <!-- Fallback if quadrant is completely empty -->
-            {% if not quadrants.bottom_left['costco_items'] and not quadrants.bottom_left['walmart_items'] %}
+            {% if not c_items and not w_items %}
                 <h5>Costco & Walmart</h5>
                 <ul class="list-unstyled">
                     <li class="text-muted fs-5">No items needed.</li>
                 </ul>
             {% endif %}
             
-        </div>  
+        </div>
         <!-- Bottom Right: Sam's Club -->
         <div class="quadrant" data-section="bottom_right">
             <h5>{{ quadrants.bottom_right.title }}</h5>
