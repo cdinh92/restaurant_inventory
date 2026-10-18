@@ -112,11 +112,12 @@
             {% set all_items = quadrants.bottom_left['items'] | default([]) %}
             {% set ns = namespace(has_costco=false, has_walmart=false, has_owner=false) %}
 
-            <!-- Pre-check which categories exist in the single items list -->
+            <!-- Pre-check which categories exist -->
             {% for item in all_items %}
-                {% if 'owner' in item.name|lower %}
+                {% set item_name = item.name|lower %}
+                {% if 'owner' in item_name %}
                     {% set ns.has_owner = true %}
-                {% elif 'walmart' in item.name|lower or (item.store is defined and item.store|lower == 'walmart') %}
+                {% elif 'walmart' in item_name or 'hanh baro' in item_name %}
                     {% set ns.has_walmart = true %}
                 {% else %}
                     {% set ns.has_costco = true %}
@@ -125,11 +126,12 @@
 
             <!-- Costco Section -->
             {% if ns.has_costco %}
-                <h5>Costco</h5>
+                <h5 class="mb-2">Costco</h5>
                 <ul class="list-unstyled">
                     {% for item in all_items %}
-                        {% if 'owner' not in item.name|lower and not ('walmart' in item.name|lower or (item.store is defined and item.store|lower == 'walmart')) %}
-                            <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                        {% set item_name = item.name|lower %}
+                        {% if 'owner' not in item_name and 'walmart' not in item_name and 'hanh baro' not in item_name %}
+                            <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
                     {% endfor %}
                 </ul>
@@ -137,11 +139,12 @@
 
             <!-- Walmart Section -->
             {% if ns.has_walmart %}
-                <h5 class="{% if ns.has_costco %}mt-4{% endif %}">Walmart</h5>
+                <h5 class="{% if ns.has_costco %}mt-3{% endif %} mb-2">Walmart</h5>
                 <ul class="list-unstyled">
                     {% for item in all_items %}
-                        {% if 'owner' not in item.name|lower and ('walmart' in item.name|lower or (item.store is defined and item.store|lower == 'walmart')) %}
-                            <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                        {% set item_name = item.name|lower %}
+                        {% if 'owner' not in item_name and ('walmart' in item_name or 'hanh baro' in item_name) %}
+                            <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
                     {% endfor %}
                 </ul>
@@ -149,11 +152,11 @@
 
             <!-- Owner Section -->
             {% if ns.has_owner %}
-                <h5 class="{% if ns.has_costco or ns.has_walmart %}mt-4{% endif %}">Owner</h5>
+                <h5 class="{% if ns.has_costco or ns.has_walmart %}mt-3{% endif %} mb-2">Owner</h5>
                 <ul class="list-unstyled">
                     {% for item in all_items %}
                         {% if 'owner' in item.name|lower %}
-                            <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
+                            <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
                     {% endfor %}
                 </ul>
