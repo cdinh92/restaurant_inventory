@@ -242,7 +242,8 @@ def export_layout():
     # Map stores to the correct quadrants
     for item in items:
         store_name = item.store.name.lower()
-        item_data = {'name': item.name, 'qty': item.quantity_needed}
+        # ADDED: 'store': store_name so the HTML knows exactly where it belongs
+        item_data = {'name': item.name, 'qty': item.quantity_needed, 'store': store_name} 
         
         if 'depot' in store_name:
             quadrants['top_left']['items'].append(item_data)

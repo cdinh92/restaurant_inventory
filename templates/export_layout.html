@@ -117,12 +117,14 @@
                 {% set all_items = quadrants.bottom_left['items'] | default([]) %}
                 {% set ns = namespace(has_costco=false, has_walmart=false, has_owner=false) %}
 
-                <!-- Pre-check which categories exist -->
+                <!-- Pre-check which categories exist using the actual store name -->
                 {% for item in all_items %}
                     {% set item_name = item.name|lower %}
+                    {% set item_store = item.store|default('')|lower %}
+                    
                     {% if 'owner' in item_name %}
                         {% set ns.has_owner = true %}
-                    {% elif 'walmart' in item_name or 'hanh baro' in item_name %}
+                    {% elif 'walmart' in item_store %}
                         {% set ns.has_walmart = true %}
                     {% else %}
                         {% set ns.has_costco = true %}
@@ -135,7 +137,8 @@
                     <ul class="list-unstyled">
                         {% for item in all_items %}
                             {% set item_name = item.name|lower %}
-                            {% if 'owner' not in item_name and 'walmart' not in item_name and 'hanh baro' not in item_name %}
+                            {% set item_store = item.store|default('')|lower %}
+                            {% if 'owner' not in item_name and 'walmart' not in item_store %}
                                 <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                             {% endif %}
                         {% endfor %}
@@ -148,7 +151,8 @@
                     <ul class="list-unstyled">
                         {% for item in all_items %}
                             {% set item_name = item.name|lower %}
-                            {% if 'owner' not in item_name and ('walmart' in item_name or 'hanh baro' in item_name) %}
+                            {% set item_store = item.store|default('')|lower %}
+                            {% if 'owner' not in item_name and 'walmart' in item_store %}
                                 <li class="mb-2">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                             {% endif %}
                         {% endfor %}
