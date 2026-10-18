@@ -106,28 +106,15 @@
                 {% endfor %}
             </ul>
         </div>
-        
-        <!-- Bottom Left: Costco & Walmart & Owner -->
+        <!-- Bottom Left: Costco, Walmart & Owner -->
         <div class="quadrant" data-section="bottom_left">
             
-            <!-- Pre-check which categories have items -->
-            {% set ns = namespace(has_costco=false, has_walmart=false, has_owner=false) %}
-            {% for item in quadrants.bottom_left['items'] %}
-                {% if 'owner' in item.name|lower %}
-                    {% set ns.has_owner = true %}
-                {% elif item.store|lower == 'costco' %}
-                    {% set ns.has_costco = true %}
-                {% elif item.store|lower == 'walmart' %}
-                    {% set ns.has_walmart = true %}
-                {% endif %}
-            {% endfor %}
-
             <!-- Costco Section -->
-            {% if ns.has_costco %}
+            {% if quadrants.bottom_left['costco_items'] %}
                 <h5>Costco</h5>
                 <ul class="list-unstyled">
-                    {% for item in quadrants.bottom_left['items'] %}
-                        {% if 'owner' not in item.name|lower and item.store|lower == 'costco' %}
+                    {% for item in quadrants.bottom_left['costco_items'] %}
+                        {% if 'owner' not in item.name|lower %}
                             <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
                     {% endfor %}
@@ -135,22 +122,29 @@
             {% endif %}
 
             <!-- Walmart Section -->
-            {% if ns.has_walmart %}
-                <h5 class="{% if ns.has_costco %}mt-4{% endif %}">Walmart</h5>
+            {% if quadrants.bottom_left['walmart_items'] %}
+                <h5 class="{% if quadrants.bottom_left['costco_items'] %}mt-4{% endif %}">Walmart</h5>
                 <ul class="list-unstyled">
-                    {% for item in quadrants.bottom_left['items'] %}
-                        {% if 'owner' not in item.name|lower and item.store|lower == 'walmart' %}
+                    {% for item in quadrants.bottom_left['walmart_items'] %}
+                        {% if 'owner' not in item.name|lower %}
                             <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
                     {% endfor %}
                 </ul>
             {% endif %}
 
-            <!-- Owner Section -->
-            {% if ns.has_owner %}
-                <h5 class="{% if ns.has_costco or ns.has_walmart %}mt-4{% endif %}">Owner</h5>
+            <!-- Owner Section (Pulls from both lists) -->
+            {% set has_owner = false %}
+            {% for item in quadrants.bottom_left['costco_items'] + quadrants.bottom_left['walmart_items'] %}
+                {% if 'owner' in item.name|lower %}
+                    {% set has_owner = true %}
+                {% endif %}
+            {% endfor %}
+
+            {% if has_owner %}
+                <h5 class="{% if quadrants.bottom_left['costco_items'] or quadrants.bottom_left['walmart_items'] %}mt-4{% endif %}">Owner</h5>
                 <ul class="list-unstyled">
-                    {% for item in quadrants.bottom_left['items'] %}
+                    {% for item in quadrants.bottom_left['costco_items'] + quadrants.bottom_left['walmart_items'] %}
                         {% if 'owner' in item.name|lower %}
                             <li class="mb-3">☐ <strong>{{ item.qty }}x</strong> - {{ item.name }}</li>
                         {% endif %}
@@ -159,14 +153,14 @@
             {% endif %}
 
             <!-- Fallback if quadrant is completely empty -->
-            {% if not ns.has_costco and not ns.has_walmart and not ns.has_owner %}
+            {% if not quadrants.bottom_left['costco_items'] and not quadrants.bottom_left['walmart_items'] %}
                 <h5>Costco & Walmart</h5>
                 <ul class="list-unstyled">
                     <li class="text-muted fs-5">No items needed.</li>
                 </ul>
-            {% endif %}    
-        </div>
-        
+            {% endif %}
+            
+        </div>  
         <!-- Bottom Right: Sam's Club -->
         <div class="quadrant" data-section="bottom_right">
             <h5>{{ quadrants.bottom_right.title }}</h5>
