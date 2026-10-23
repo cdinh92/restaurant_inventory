@@ -111,18 +111,20 @@
                 </ul>
             </div>
 
-            <!-- Bottom Left: Costco, Walmart & Owner -->
+            <!-- Bottom Left: Costco, Walmart, Owner & Crawfish Market -->
             <div class="quadrant" data-section="bottom_left">
                 
                 {% set all_items = quadrants.bottom_left['items'] | default([]) %}
-                {% set ns = namespace(has_costco=false, has_walmart=false, has_owner=false) %}
+                {% set ns = namespace(has_costco=false, has_walmart=false, has_owner=false, has_crawfish=false) %}
 
                 <!-- Pre-check which categories exist using the actual store name -->
                 {% for item in all_items %}
                     {% set item_name = item.name|lower %}
                     {% set item_store = item.store|default('')|lower %}
                     
-                    {% if 'owner' in item_name %}
+                    {% if 'crawfish market' in item_name %}
+                        {% set ns.has_crawfish = true %}
+                    {% elif 'owner' in item_name %}
                         {% set ns.has_owner = true %}
                     {% elif 'walmart' in item_store %}
                         {% set ns.has_walmart = true %}
@@ -138,7 +140,7 @@
                         {% for item in all_items %}
                             {% set item_name = item.name|lower %}
                             {% set item_store = item.store|default('')|lower %}
-                            {% if 'owner' not in item_name and 'walmart' not in item_store %}
+                            {% if 'crawfish market' not in item_name and 'owner' not in item_name and 'walmart' not in item_store %}
                                 <li class="mb-2"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                             {% endif %}
                         {% endfor %}
@@ -152,7 +154,7 @@
                         {% for item in all_items %}
                             {% set item_name = item.name|lower %}
                             {% set item_store = item.store|default('')|lower %}
-                            {% if 'owner' not in item_name and 'walmart' in item_store %}
+                            {% if 'crawfish market' not in item_name and 'owner' not in item_name and 'walmart' in item_store %}
                                 <li class="mb-2"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                             {% endif %}
                         {% endfor %}
@@ -165,6 +167,18 @@
                     <ul class="list-unstyled">
                         {% for item in all_items %}
                             {% if 'owner' in item.name|lower %}
+                                <li class="mb-2"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
+                            {% endif %}
+                        {% endfor %}
+                    </ul>
+                {% endif %}
+
+                <!-- Crawfish Market Section -->
+                {% if ns.has_crawfish %}
+                    <h5 class="{% if ns.has_costco or ns.has_walmart or ns.has_owner %}mt-3{% endif %} mb-2">Crawfish Market</h5>
+                    <ul class="list-unstyled">
+                        {% for item in all_items %}
+                            {% if 'crawfish market' in item.name|lower %}
                                 <li class="mb-2"><strong>{{ item.qty }}</strong> - {{ item.name }}</li>
                             {% endif %}
                         {% endfor %}
