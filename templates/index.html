@@ -21,9 +21,43 @@
             font-size: 1.25rem; 
         }
     }
+
+    /* CSS cho Modal Trợ Giúp */
+    .custom-modal {
+        display: none; 
+        position: fixed;
+        z-index: 1050;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.5); 
+    }
+    .custom-modal-content {
+        background-color: #fff;
+        margin: 15% auto;
+        padding: 20px;
+        border-radius: 8px;
+        width: 90%;
+        max-width: 500px;
+        box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+        position: relative;
+    }
+    .custom-close {
+        position: absolute;
+        top: 10px;
+        right: 15px;
+        color: #aaa;
+        font-size: 24px;
+        font-weight: bold;
+        cursor: pointer;
+    }
+    .custom-close:hover {
+        color: #000;
+    }
 </style>
 
-<!-- NEW: Mobile Weather Warning Pop-up (Hidden unless rain/snow is forecasted) -->
+<!-- Mobile Weather Warning Pop-up (Hidden unless rain/snow is forecasted) -->
 <div id="mobile-weather-alert" class="d-none">
     <div class="alert shadow-sm mb-4" style="background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%); border-left: 5px solid #f59e0b; color: #92400e; border-radius: 8px;" role="alert">
         <div class="d-flex align-items-center gap-3">
@@ -34,12 +68,33 @@
 </div>
 
 <!-- Quick Search Bar on Home Screen -->
-<form method="GET" action="/search" class="mb-5">
+<form method="GET" action="/search" class="mb-2"> <!-- Đổi mb-5 thành mb-2 để nút gần thanh search hơn -->
     <div class="input-group input-group-lg shadow-sm">
         <input type="text" name="q" class="form-control border-0" placeholder="🔍 Quick search items...">
         <button class="btn btn-primary px-4 fw-bold border-0" style="background: linear-gradient(135deg, #6366f1 0%, #3b82f6 100%);" type="submit">Search</button>
     </div>
 </form>
+
+<!-- Help "Search" button in Vietnamese language -->
+<div class="text-end mb-4">
+    <button type="button" id="helpBtn" class="btn btn-sm btn-outline-secondary rounded-pill shadow-sm">
+        <span class="fw-bold">❓ Trợ Giúp Ghi Order</span>
+    </button>
+</div>
+
+<!-- Help button content in Vietnamese language -->
+<div id="helpModal" class="custom-modal text-start">
+  <div class="custom-modal-content">
+    <span class="custom-close">&times;</span>
+    <h5 class="text-danger border-bottom pb-2 mb-3">📌 Lưu ý khi ghi order:</h5>
+    <ul class="mb-0 text-dark" style="line-height: 1.8;">
+      <li><strong>Gia vị nấu chay</strong> và <strong>Nấu chay</strong> là 2 món khác nhau.</li>
+      <li>Chỉ cần ghi <strong>Nấu chay</strong> đã bao gồm: <em>6 củ sắn và 10 lb củ cải trắng</em>.</li>
+      <li>Nếu bếp order <strong>"Đồ chua"</strong> thì cần ghi tách ra 3 món: <em>7 chai 7 up, củ cải trắng (thùng), và cà rốt (bịch)</em>.</li>
+      <li><strong>Cua giả bán Phở</strong> và <strong>Cua giả bán hoành thánh</strong> là 2 món khác nhau.</li>
+    </ul>
+  </div>
+</div>
 
 <!-- Inventory Sections -->
 <div class="d-flex justify-content-between align-items-center mb-4">
@@ -62,4 +117,27 @@
         <div class="col-12 p-4 text-center text-muted bg-white rounded shadow-sm">No sections created yet. Visit Admin to set them up!</div>
     {% endfor %}
 </div>
+
+<!-- Script cho Modal -->
+<script>
+document.addEventListener("DOMContentLoaded", function() {
+    const modal = document.getElementById("helpModal");
+    const btn = document.getElementById("helpBtn");
+    const span = document.getElementsByClassName("custom-close")[0];
+
+    btn.onclick = function() {
+        modal.style.display = "block";
+    }
+
+    span.onclick = function() {
+        modal.style.display = "none";
+    }
+
+    window.onclick = function(event) {
+        if (event.target == modal) {
+            modal.style.display = "none";
+        }
+    }
+});
+</script>
 {% endblock %}
