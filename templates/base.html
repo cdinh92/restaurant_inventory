@@ -39,9 +39,36 @@
         }
 
         .sidebar-brand {
-            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.45rem;
+            text-decoration: none;
+        }
+
+        .sidebar-brand-box {
+            background: #ffffff;
+            border-radius: 12px;
+            padding: 8px 12px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+            width: 100%;
+            max-width: 195px;
+            text-align: center;
+        }
+
+        .sidebar-brand-box img {
+            max-height: 38px;
+            width: auto;
+            max-width: 100%;
+            object-fit: contain;
+        }
+
+        .sidebar-brand-sub {
+            font-size: 0.75rem;
             font-weight: 800;
-            margin-bottom: 2.5rem;
+            letter-spacing: 0.18em;
+            text-transform: uppercase;
             background: linear-gradient(90deg, #38bdf8, #818cf8);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
@@ -146,9 +173,7 @@
                 flex-direction: column; 
                 align-items: center;
             }
-            .sidebar-brand {
-                margin-bottom: 1rem;
-            }
+
             .sidebar-nav {
                 flex-direction: row;
                 flex-wrap: wrap; /* Allows items to wrap to a second line */
@@ -176,7 +201,12 @@
     <div class="app-wrapper">
         <!-- Persistent Left Sidebar -->
         <nav class="sidebar">
-            <div class="sidebar-brand">📦 Inventory</div>
+            <a href="/" class="sidebar-brand">
+                <div class="sidebar-brand-box" style="background: transparent; box-shadow: none; padding: 0;">
+                    <img src="{{ url_for('static', filename='images/pho_vietnam_logo.png') }}" alt="PHO VIETNAM">
+                </div>
+                <span class="sidebar-brand-sub">Inventory</span>
+            </a>
             <ul class="sidebar-nav">
                 <li><a href="/">🏠 Dashboard</a></li>
                 <li><a href="/shopping_list">🛒 Shopping</a></li>
