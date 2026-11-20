@@ -1,10 +1,10 @@
-from flask import Flask, render_template, request, redirect, url_for
+from collections import Counter
+from flask import Flask, render_template, request, redirect, url_for, jsonify, session
 from models import db, Store, Section, Item, seed_database
 import os
 import difflib # for searching bar
 from datetime import datetime, timedelta
 import json
-from flask import session # add protection for section PINs
 
 app = Flask(__name__)
 
@@ -63,10 +63,95 @@ with app.app_context():
     db.create_all()
     seed_database()
 
+'''
+A helper function to read Shopping History and count how many export days each item 
+appears then return the top 10 along with each item's current quantity needed 
+'''
+def get_top_staples(limit=10):
+    history_records = ShoppingHistory.query.order_by(ShoppingHistory.export_date.desc()).all()
+    freq_counter = Counter()
+    qty_counter = Counter()
+    last_qty_map = {}
+
+    for record in history_records:
+        try:
+            quadrants = json.loads(record.data_json)
+        except (TypeError, json.JSONDecodeError):
+            continue
+
+        seen_today = set()
+        for quad in quadrants.values():
+            for entry in quad.get('items', []):
+                raw_name = (entry.get('name') or '').strip()
+                if not raw_name:
+                    continue
+                key = raw_name.lower()
+                qty = max(1, int(entry.get('qty', 1) or 1))
+                qty_counter[key] += qty
+
+                if key not in last_qty_map:
+                    last_qty_map[key] = qty
+
+                if key not in seen_today:
+                    freq_counter[key] += 1
+                    seen_today.add(key)
+
+    ranked_keys = sorted(
+        freq_counter.keys(),
+        key=lambda k: (freq_counter[k], qty_counter[k]),
+        reverse=True
+    )[:limit]
+
+    all_items = Item.query.all()
+    item_by_lower = {item.name.strip().lower(): item for item in all_items}
+
+    staples = []
+    for key in ranked_keys:
+        matched_item = item_by_lower.get(key)
+        last_qty = last_qty_map.get(key, 1)
+        staples.append({
+            'id': matched_item.id if matched_item else None,
+            'name': matched_item.name if matched_item else key.title(),
+            'freq': freq_counter[key],
+            'total_qty': qty_counter[key],
+            'last_qty': last_qty,
+            'current_qty': matched_item.quantity_needed if matched_item else 0
+        })
+    return staples
+
 @app.route('/')
 def index():
     sections = Section.query.all()
-    return render_template('index.html', sections=sections)
+    top_staples = get_top_staples(10)
+    return render_template('index.html', sections=sections, top_staples=top_staples)
+
+@app.route('/quick_add_item', methods=['POST'])
+def quick_add_item():
+    payload = request.get_json(silent=True) or {}
+    item_id = payload.get('item_id')
+    item_name = (payload.get('name') or '').strip()
+    add_qty = max(1, int(payload.get('add_qty', 1) or 1))
+
+    item = None
+    if item_id is not None:
+        item = Item.query.get(item_id)
+    if not item and item_name:
+        item = Item.query.filter(db.func.lower(Item.name) == item_name.lower()).first()
+
+    if not item:
+        return jsonify({'ok': False, 'error': 'Item not found'}), 404
+
+    item.quantity_needed = max(0, (item.quantity_needed or 0) + add_qty)
+    db.session.commit()
+    update_activity_timer()
+
+    return jsonify({
+        'ok': True,
+        'id': item.id,
+        'name': item.name,
+        'added_qty': add_qty,
+        'quantity_needed': item.quantity_needed
+    })
 
 @app.route('/section/<int:section_id>', methods=['GET', 'POST'])
 def manage_section(section_id):
